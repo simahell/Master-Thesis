@@ -1,6 +1,5 @@
 \documentclass[12pt,a4paper]{jbook}
 
-%\input{settings}
 \usepackage{mm-thesis}
 \usepackage[dvipdfmx]{graphicx}
 \usepackage{latexsym}
@@ -9,7 +8,6 @@
 \usepackage{amsfonts}
 \usepackage{cite}
 \usepackage{comment}
-%\usepackage{docmute}
 
 \thesis{\master}
 \title{webの汎用的解析に向けた時相論理の表現による形式検証}
@@ -17,11 +15,7 @@
 \supervisor{藤原 融　教授}
 \deadline{2017年2月15日}
 
-\abstract{
-こうがい
-}
-
-\keyword{きーわーど1, きーわーど2}
+\input{abstract}
 
 \begin{document}
 
@@ -31,36 +25,12 @@
 \listoftables
 \body
 
-\chapter{はじめに}
-
-\chapter{準備}
-\section{形式検証}
-\subsection{Alloy}
-\section{セキュリティモデル}
-\section{時相論理}
-\section{キャッシュ}
-\subsection{Browser Cache Poisoning攻撃}
-\section{中継者}
-\section{Hypertext Transfer Protocol}
-\section{関連研究}
-
-\chapter{既存のモデル}
-\section{拡張を想定した汎用モデル}
-\section{Cookieを包括するモデル}
-\section{問題点}
-
-\chapter{時相論理を包括するモデル}
-\section{時相論理の表現方法}
-\section{時相論理の応用}
-\subsection{キャッシュ}
-\subsection{中継者}
-
-\chapter{事例研究}
-\section{キャッシュの基本動作}
-\section{中継者の基本動作}
-\section{BCP攻撃}
-
-\chapter{おわりに}
+\input{introduction}
+\input{preparation}
+\input{existing-model}
+\input{proposed-model}
+\input{casestudy}
+\input{conclusion}
 
 \acknowledgement
 まず，本研究を進める全過程において多大な御指導を賜りました藤原融教授に深く感謝致します．
