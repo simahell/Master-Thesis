@@ -45,19 +45,32 @@ Alloy Analyzerは形式手法による解析ツールの一つである。
 として得られるため、より直観的な利用が可能であることが挙げられる。
 さらに、Alloy AnalyzerはJavaを用いて実装されており、環境の構築はJavaのインストールのみで利用することができる。
 
+\color{red}
 \subsection{時相論理}
 \label{sec:TemporalLogic}
+%\subsubsection{概要}
+時相論理は通常の命題論理に「常に～である」「次の状態では～である」のような、いくつかの論理演算子を加えることで時間変化を表現できるよう、拡張したものである。
+時相論理において記述した論理式は、その性質から以下の二種類に分類できる。
+\begin{itemize}
+\item 状態論理式\\
+状態論理式はモデルが取りうる各状態に対して真偽が定まる
+\item パス論理式\\
+パスはそのモデルにおいて状態が変化していく遷移を表す。
+パス論理式はモデルが取りうるパスに対して真偽が定まる。
+\end{itemize}
 
-%\subsection{概要}
-
-%時相論理は通常の命題論理を、「常に～である」「次の状態では～である」といったいくつかの演算子を加え、時間変化を表現できるよう拡張したものである。
-
-
-%\subsection{線形時間論理}
-%線形時間論理（Linear Temporal Logic, LTL）
-
-%\subsection{計算木論理}
-%計算木論理（Computional Tree Logic, CTL）
+また、時相論理にもいくつか種類が存在し、それぞれで扱える演算子が異なるため表現能力が異なる。
+以下に形式手法に用いられる三つの時相論理を挙げる。
+\begin{itemize}
+\item LTL（linear temporal logic / 線形時相論理）\\
+LTLはパス論理式のみを表現可能である。
+\item CTL（compuational tree logic / 計算木論理）\\
+CTLは状態論理式のみを表現可能である。
+\item CTL*\\
+CTL*はパス論理式、及び、状態論理式のどちらも表現可能である。
+また、上記のLTLとCTLはCTL*の部分論理である。
+\end{itemize}
+\color{black}
 
 \color{red}
 \section{World Wide Web}
@@ -106,11 +119,24 @@ World Wide Web（以下、ウェブとする）はインターネットにおい
 
 \subsection{キャッシュを利用する攻撃}
 %Browser Cache Poisoning攻撃について
-%\color{red}
-%キャッシュを利用した攻撃の一例としてBrowser Cache Poisoning攻撃\cite{bcpattack}を取り上げる。
-%\color{black}
+\color{red}
+キャッシュを利用した攻撃の一例としてBrowser Cache Poisoning攻撃（以下、BCP攻撃とする）\cite{bcpattack}を取り上げる。
+BCP攻撃はクライアントとサーバの経路上に攻撃者である第三者が割り込んで行う、中間者攻撃に該当する。
+このBCP攻撃の基本的な手順は以下の通りである。
+\begin{enumerate}
+\item 攻撃者はクライアントとサーバ間の通信経路上に割り込む
+\item サーバからクライアントへ送信されるレスポンスのヘッダとリソースを書きかえる
+\item 通信経路上のキャッシュ（クライアントもしくは中継者のキャッシュ）にその書き換えたレスポンスを格納させる
+\item 今後、クライアントはそのリソースを使用しようとする度にキャッシュによる再利用が発生し、攻撃者によって書き換えられたリソースを受け取ることになる
+\end{enumerate}
+
+BCP攻撃の特徴は、まず攻撃者が実際に行動するのはレスポンスの書き換えを行う一度きりであるのに対し、その影響は以降の通信全てに影響することである。
+また、攻撃が可能な対象が通信プロトコルの一つのHTTP（\ref{sec:http}参照）や、暗号通信プロトコルHTTPS（\ref{sec:https}参照）である。
+これらは現在広くウェブで使用されておりBCP攻撃の危険性は高くなっている一方で、このBCP攻撃の対策法は固まっておらず速やかな解析が求められている。
+\color{black}
 
 \section{Hypertext Transfer Protocol}
+\label{sec:http}
 \subsection{プロトコルの概要}
 Hypertext Transfer Protocol（以下、HTTPとする）は様々なデータの形式や通信目的に共通して対応できる汎用的な通信を実現するためのプロトコルとして設計された。
 このHTTPは、ウェブの環境に合わせて仕様変更がなされており様々なバージョンが存在する。
@@ -161,6 +187,18 @@ HTTP通信ではクライアントとレスポンスの経路間で複数のプ�
 これにより、認証を必要とする通信において、認証成功後にトンネルを作成しておくことでその経路の通信を確立しておくことができる。
 また、上記のプロキシとゲートウェイと異なり、トンネル自体はキャッシュを保有していない。
 \end{enumerate}
+
+\color{red}
+\subsection{HTTP Over TLS}
+\label{sec:https}
+HTTP Over TLS\cite{https}（以下、HTTPSとする）は、簡単に通信内容を傍受される可能性のあるHTTPを拡張し、安全性を向上させた暗号通信プロトコルである。
+HTTPに以下の機能を持つSecure Socket Layer/Transport Layer Security(SSL/TLS)を加えることで通信の安全性を確保している。
+\begin{itemize}
+\item 通信内容の暗号化
+\item 通信相手の認証
+\item 通信内容の改ざんの検出
+\end{itemize}
+\color{black}
 
 \section{関連研究}
 
