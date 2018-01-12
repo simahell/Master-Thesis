@@ -128,7 +128,9 @@ HTTPリクエストが正当なユーザによって生成されたものであ�
 \color{red}
 \subsection{基礎モデルにおけるHTTPの実装}
 \label{sec:based-model-http}
-まず、基礎モデルにおいてリクエストとレスポンスはCode\ref{code:httpevent}のように表現される。
+
+\subsubsection{リクエストとレスポンス}
+基礎モデルにおいてリクエストとレスポンスはCode\ref{code:httpevent}のように表現される。
 \begin{lstlisting}[caption=HTTPRequest/HTTPResponse, label=code:httpevent]
 abstract sig Event {pre,post : Time}
 abstract sig NetworkEvent extends Event {
@@ -154,12 +156,13 @@ sig HTTPResponse extends HTTPEvent {
 リクエストを表すHTTPRequestにはメソッド、ヘッダといった要素が含まれ、また、レスポンスを表すHTTPResponseには状態コード、ヘッダといった要素が含まれる。
 基礎モデルの包括範囲では、リクエストとレスポンスのどちらにでも利用可能なヘッダを含めていないため、それぞれ別のエンティティで定義し混在することのないように記述している。
 
+\subsubsection{ネットワーク参加者}
 
 
 \subsection{基礎モデルにおける時相論理の実装}
 \label{sec:based-model-temporal-logic}
 形式手法ツールAlloyは時間軸を表現する機能を元々持たないので、モデル内に独自に時相論理を記述する必要がある。
-まず最初に時間軸をCode\ref{code:time}定義する。
+まず最初に時間軸となるインスタンスをCode\ref{code:time}のように記述する。
 \begin{lstlisting}[caption=基礎モデルにおける時間軸, label=code:time]
 open util/ordering[Time]
 sig Time {}
@@ -168,7 +171,16 @@ fact Traces{
 	all e:Event | e.post=e.pre.next
 }
 \end{lstlisting}
+まず1,2行目において、時間軸上でのある時点を表すインスタンスをTimeとして作成する。
+ここで、orderingのオプションによりTimeはインスタンス同士で順序づけが可能となっており、次の順番のインスタンスを表すnext演算子、インスタンスの並びで最初と最後のインスタンスを表すfirst,lastといった演算子が使用可能となっている。
+この記述とCode\ref{code:httpevent}の記述を合わせることで、時間軸を表すTimeとEventとの対応が表現できる（図\ref{fig:existing-model-temporal-logic}参照）。
 
+\begin{figure}[htb]
+\centering
+\includegraphics[width=400pt]{./fig/existing-model-temporal-logic.eps}
+\caption{基礎モデルにおける時間軸とイベントの対応図}
+\label{fig:existing-model-temporal-logic}
+\end{figure}
 \color{black}
 
 \section{Cookieを包括するモデル}
