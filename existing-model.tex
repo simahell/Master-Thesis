@@ -151,18 +151,58 @@ sig HTTPResponse extends HTTPEvent {
 }
 \end{lstlisting}
 コード内におけるextendsは継承関係を表し、例えば2行目においてはNetworkEventはEventを継承する。
-まず、親クラスであるEventはウェブ上で発生するイベントを表し、\ref{sec:based-model-temporal-logic}節で述べる時相論理の時間軸上で、そのイベントがどの時点で発生したかを表現できる。
+まず、親クラスであるEventはウェブ上で発生するイベントを表し、Eventクラスに用意されているpre,postによって\ref{sec:based-model-temporal-logic}節で述べる時相論理の時間軸上で、そのイベントがどの時点で発生したかを表現できる。
 次に、NetworkEventは
 リクエストを表すHTTPRequestにはメソッド、ヘッダといった要素が含まれ、また、レスポンスを表すHTTPResponseには状態コード、ヘッダといった要素が含まれる。
 基礎モデルの包括範囲では、リクエストとレスポンスのどちらにでも利用可能なヘッダを含めていないため、それぞれ別のエンティティで定義し混在することのないように記述している。
 
 \subsubsection{ネットワーク参加者}
+基礎モデルにおいてリクエストとレスポンスはCode\ref{code:character}のように表現される。
+\begin{lstlisting}[caption=ネットワーク参加者, label=code:character]
+abstract sig Principal {
+	servers : set NetworkEndpoint,
+	dnslabels : set DNS,
+}
+abstract sig PassivePrincipal extends Principal{}{
+	servers in HTTPConformist
+}
+sig WebPrincipal extends PassivePrincipal {
+	httpClients : set HTTPClient
+}{
+	httpClients.owner = this
+}
+lone sig Alice extends WebPrincipal {}
+lone sig ACTIVEATTACKER extends Principal{}
+lone sig WEBATTACKER extends WebPrincipal{}
+lone sig PASSIVEATTACKER extends PassivePrincipal{}
+\end{lstlisting}
 
+%%%
+%%%
+%%%
+
+\subsubsection{ネットワークアプリケーション}
+基礎モデルにおいて通信を行うネットワークアプリケーションはCode\ref{code:endpoint}のように表現される。
+\begin{lstlisting}[caption=ネットワーク参加者, label=code:endpoint]
+sig NetworkEndpoint{}
+abstract sig HTTPConformist extends NetworkEndpoint{}
+sig HTTPServer extends HTTPConformist{}
+abstract sig HTTPClient extends HTTPConformist{
+	owner:WebPrincipal
+}
+sig Browser extends HTTPClient {
+	trustedCA : set certificateAuthority
+}
+\end{lstlisting}
+
+%%%
+%%%
+%%%
 
 \subsection{基礎モデルにおける時相論理の実装}
 \label{sec:based-model-temporal-logic}
 形式手法ツールAlloyは時間軸を表現する機能を元々持たないので、モデル内に独自に時相論理を記述する必要がある。
-まず最初に時間軸となるインスタンスをCode\ref{code:time}のように記述する。
+まず最初に時間軸となるクラスをCode\ref{code:time}のように記述する。
 \begin{lstlisting}[caption=基礎モデルにおける時間軸, label=code:time]
 open util/ordering[Time]
 sig Time {}
@@ -171,14 +211,14 @@ fact Traces{
 	all e:Event | e.post=e.pre.next
 }
 \end{lstlisting}
-まず1,2行目において、時間軸上でのある時点を表すインスタンスをTimeとして作成する。
-ここで、orderingのオプションによりTimeはインスタンス同士で順序づけが可能となっており、次の順番のインスタンスを表すnext演算子、インスタンスの並びで最初と最後のインスタンスを表すfirst,lastといった演算子が使用可能となっている。
+まず1,2行目において、時間軸上でのある時点を表すクラスをTimeとして作成する。
+ここで、orderingのオプションによりTimeクラスのインスタンスに順序づけが可能となっており、次の順番のインスタンスを表すnext演算子、インスタンスの並びで最初と最後のインスタンスを表すfirst,lastといった演算子が使用可能となっている。
 この記述とCode\ref{code:httpevent}の記述を合わせることで、時間軸を表すTimeとEventとの対応が表現できる（図\ref{fig:existing-model-temporal-logic}参照）。
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=400pt]{./fig/existing-model-temporal-logic.eps}
-\caption{基礎モデルにおける時間軸とイベントの対応図}
+\caption{基礎モデルにおける時間軸とイベントの対応}
 \label{fig:existing-model-temporal-logic}
 \end{figure}
 \color{black}
