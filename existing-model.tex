@@ -37,17 +37,17 @@ Akhaweらによって提案されたウェブセキュリティモデル\cite{ba
 \item 非線形時間 \\
 基礎モデルでは、時相論理として非線形時間軸を用いる。詳細は\ref{sec:based-model-temporal-logic}節に記述する。
 \item ブラウザ \\
-基礎モデルにおいて、ブラウザのモデルは大きく三つの項目で構成される。
+基礎モデルにおいて、ブラウザのモデルは大きく三つの観点から設計されている。
 
-まず、ブラウザで動作するスクリプトについてである。
+まず、ブラウザで動作するスクリプトについて述べる。
 スクリプトのうち、同様のオリジンに属するスクリプトは権限を持つ。
 これは、異なるウェブページで動作していたとしても同じオリジンであれば、それらを一つのスクリプトとして取り扱うことを意味する。
 
-次に、ブラウザ内のUIについてである。
+次に、ブラウザ内のUIについて述べる。
 ブラウザ内には、HTTPSにおけるグリーンバーのような、セキュリティに関する内容を示唆するUIが存在する。
 このような安全性に関するUIは、基礎モデルで包括する。
 
-最後に、メモリ領域についてである。
+最後に、メモリ領域について述べる。
 基礎モデルでは、この領域をCookieやパスワードの保存領域として取り扱う。
 この領域内の機密情報はある一つのオリジンとの関連を持ち、そのオリジンによるスクリプトによって読みだされる。
 ただし、モデルの単純化のため、このメモリ領域は「追加」のみ可能とし、格納した情報の削除といった動作は包括しない。
@@ -128,8 +128,46 @@ HTTPリクエストが正当なユーザによって生成されたものであ�
 \color{red}
 \subsection{基礎モデルにおけるHTTPの実装}
 \label{sec:based-model-http}
+まず、基礎モデルにおいてリクエストとレスポンスはCode\ref{code:httpevent}のように表現される。
+\begin{lstlisting}[caption=HTTPRequest/HTTPResponse, label=code:httpevent]
+abstract sig Event {pre,post : Time}
+abstract sig NetworkEvent extends Event {
+	from: NetworkEndpoint,
+	to: NetworkEndpoint
+}
+abstract sig HTTPEvent extends NetworkEvent {host : Origin}
+sig HTTPRequest extends HTTPEvent { 
+	method : Method,
+	path : Path,
+	queryString : set attributeNameValuePair,
+	headers : set HTTPRequestHeader,
+	body : set Token
+}
+sig HTTPResponse extends HTTPEvent {
+	statusCode : Status,
+	headers : set HTTPResponseHeader
+}
+\end{lstlisting}
+コード内におけるextendsは継承関係を表し、例えば2行目においてはNetworkEventはEventを継承する。
+まず、親クラスであるEventはウェブ上で発生するイベントを表し、\ref{sec:based-model-temporal-logic}節で述べる時相論理の時間軸上で、そのイベントがどの時点で発生したかを表現できる。
+次に、NetworkEventは
+リクエストを表すHTTPRequestにはメソッド、ヘッダといった要素が含まれ、また、レスポンスを表すHTTPResponseには状態コード、ヘッダといった要素が含まれる。
+基礎モデルの包括範囲では、リクエストとレスポンスのどちらにでも利用可能なヘッダを含めていないため、それぞれ別のエンティティで定義し混在することのないように記述している。
+
+
+
 \subsection{基礎モデルにおける時相論理の実装}
 \label{sec:based-model-temporal-logic}
+形式手法ツールAlloyは時間軸を表現する機能を元々持たないので、モデル内に独自に時相論理を記述する必要がある。
+まず最初に時間軸をCode\ref{code:time}定義する。
+\begin{lstlisting}[caption=基礎モデルにおける時間軸, label=code:time]
+open util/ordering[Time]
+sig Time {}
+fact Traces{
+	all t:Time- last | one e:Event | e.pre=t and e.post=t.next
+	all e:Event | e.post=e.pre.next
+}
+\end{lstlisting}
 
 \color{black}
 
