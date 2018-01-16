@@ -11,7 +11,7 @@
 セキュリティモデルに記述する項目は主に以下の三つである。
 \begin{itemize}
 \item 対象のシステムの構造と動作
-\item 脅威モデル（システムにとって脅威となる動作　例：攻撃者の能力）
+\item 脅威モデル（システムにとって脅威となりうるもののモデル　例：攻撃者の能力）
 \item 安全性要件（システムが安全である場合に満たしているべき条件）
 \end{itemize}
 
@@ -24,6 +24,7 @@ Akhaweらによって提案されたウェブセキュリティモデル\cite{ba
 しかし、ウェブで運用されている要素の数は膨大であるため、現在の環境で頻繁に使用されている要素に注目して設計されている。
 
 \subsection{基礎モデルの能力}
+\label{sec:based-model-power}
 基礎モデルが表現する内容を\ref{sec:SecurityModel}節の項目に従って説明する。
 
 \subsubsection{対象のシステムの構造と動作}
@@ -131,13 +132,16 @@ HTTPリクエストが正当なユーザによって生成されたものであ�
 
 \subsubsection{リクエストとレスポンス}
 基礎モデルにおいてリクエストとレスポンスはCode\ref{code:httpevent}のように表現される。
-\begin{lstlisting}[caption=HTTPRequest/HTTPResponse, label=code:httpevent]
+\begin{lstlisting}[caption=リクエストとレスポンスを表現するクラス, label=code:httpevent]
 abstract sig Event {pre,post : Time}
+
 abstract sig NetworkEvent extends Event {
 	from: NetworkEndpoint,
 	to: NetworkEndpoint
 }
+
 abstract sig HTTPEvent extends NetworkEvent {host : Origin}
+
 sig HTTPRequest extends HTTPEvent { 
 	method : Method,
 	path : Path,
@@ -145,16 +149,60 @@ sig HTTPRequest extends HTTPEvent {
 	headers : set HTTPRequestHeader,
 	body : set Token
 }
+
 sig HTTPResponse extends HTTPEvent {
 	statusCode : Status,
 	headers : set HTTPResponseHeader
 }
 \end{lstlisting}
-コード内におけるextendsは継承関係を表し、例えば2行目においてはNetworkEventはEventを継承する。
+コード内におけるextendsは継承関係を表し、例えば3行目においてはNetworkEventはEventを継承する。
 まず、親クラスであるEventはウェブ上で発生するイベントを表し、Eventクラスに用意されているpre,postによって\ref{sec:based-model-temporal-logic}節で述べる時相論理の時間軸上で、そのイベントがどの時点で発生したかを表現できる。
 次に、NetworkEventは
 リクエストを表すHTTPRequestにはメソッド、ヘッダといった要素が含まれ、また、レスポンスを表すHTTPResponseには状態コード、ヘッダといった要素が含まれる。
 基礎モデルの包括範囲では、リクエストとレスポンスのどちらにでも利用可能なヘッダを含めていないため、それぞれ別のエンティティで定義し混在することのないように記述している。
+
+また、リクエストとレスポンスは対の対応関係があり、どのリクエストに対するレスポンスであるのかを明らかにできるよう、Code\ref{code:based-model-httptransaction}のようにHTTPTransactionクラスを作成している。
+\begin{lstlisting}[caption=リクエストとレスポンスの対応関係, label=code:based-model-httptransaction]
+sig HTTPTransaction {
+	req : HTTPRequest,
+	resp : lone HTTPResponse,
+	cert : lone Certificate,
+	cause : lone HTTPTransaction + RequestAPI
+}{
+	some resp implies {
+		resp.host = req.host
+		happensBeforeOrdering[req,resp]
+	}
+
+	req.host.schema = HTTPS implies some cert and some resp
+	some cert implies req.host.schema = HTTPS
+}
+\end{lstlisting}
+HTTPTransactionクラスはリクエストとそれに対応するレスポンスを保有する。
+ただし、リクエストは必ずインスタンスが存在することに対し、レスポンスは一つ存在するか、もしくは存在しない場合がある。
+これは何らかの要因でリクエストに応答がない場合があり、そういった場合には対応するレスポンスが存在しないことを表現している。
+また、7~13行目ではHTTPTransactionが満たすべき条件が記述されており、特に9行目にはリクエストがレスポンスよりも前に発生しているという、時相論理を用いた条件が記述されている。
+
+\subsubsection{ネットワークアプリケーション}
+基礎モデルにおいて通信を行うネットワークアプリケーションはCode\ref{code:endpoint}のように表現される。
+\begin{lstlisting}[caption=ネットワーク参加者, label=code:endpoint]
+sig NetworkEndpoint{}
+
+abstract sig HTTPConformist extends NetworkEndpoint{}
+
+sig HTTPServer extends HTTPConformist{}
+
+abstract sig HTTPClient extends HTTPConformist{
+	owner:WebPrincipal
+}
+
+sig Browser extends HTTPClient {
+	trustedCA : set certificateAuthority
+}
+\end{lstlisting}
+親クラスであるNetworkEndpointはネットワーク上に存在するアプリケーションを表現するクラスである。
+ただし、このクラスに含まれるアプリケーションはHTTPを遵守しているとは限らず、HTTPに遵守して動作するアプリケーションを表すクラスとしてHTTPConformistを定義している。
+基礎モデルではHTTPを利用するアプリケーションとしてクライアントとサーバを包括しているため、このHTTPConformistを継承しHTTPClientとHTTPServerが定義されている。
 
 \subsubsection{ネットワーク参加者}
 基礎モデルにおいてリクエストとレスポンスはCode\ref{code:character}のように表現される。
@@ -163,63 +211,51 @@ abstract sig Principal {
 	servers : set NetworkEndpoint,
 	dnslabels : set DNS,
 }
+
 abstract sig PassivePrincipal extends Principal{}{
 	servers in HTTPConformist
 }
+
 sig WebPrincipal extends PassivePrincipal {
 	httpClients : set HTTPClient
 }{
 	httpClients.owner = this
 }
+
 lone sig Alice extends WebPrincipal {}
 lone sig ACTIVEATTACKER extends Principal{}
 lone sig WEBATTACKER extends WebPrincipal{}
 lone sig PASSIVEATTACKER extends PassivePrincipal{}
 \end{lstlisting}
-
-%%%
-%%%
-%%%
-
-\subsubsection{ネットワークアプリケーション}
-基礎モデルにおいて通信を行うネットワークアプリケーションはCode\ref{code:endpoint}のように表現される。
-\begin{lstlisting}[caption=ネットワーク参加者, label=code:endpoint]
-sig NetworkEndpoint{}
-abstract sig HTTPConformist extends NetworkEndpoint{}
-sig HTTPServer extends HTTPConformist{}
-abstract sig HTTPClient extends HTTPConformist{
-	owner:WebPrincipal
-}
-sig Browser extends HTTPClient {
-	trustedCA : set certificateAuthority
-}
-\end{lstlisting}
-
-%%%
-%%%
-%%%
+親クラスであるPrincipalは最も制限のないユーザであり、いくつかのアプリケーションとそれに割り当てられているDNSを保有する。
+このPrincipalを継承するPassivePrincipalはHTTPに従った動作を行うユーザを表し、保有するアプリケーションが全てHTTPに従うことを表している。
+最後に、PassivePrincipalを継承しているWebPrincipalは一般的なユーザを表現するクラスであり、主にHTTPのクライアントのソフトウェアを使用しているクラスとして記述されている。
+また、これらのユーザのクラスの能力に対応して、17~19行目において三種類の攻撃者のクラスが定義されている。
 
 \subsection{基礎モデルにおける時相論理の実装}
 \label{sec:based-model-temporal-logic}
 形式手法ツールAlloyは時間軸を表現する機能を元々持たないので、モデル内に独自に時相論理を記述する必要がある。
-まず最初に時間軸となるクラスをCode\ref{code:time}のように記述する。
+基礎モデルの時間軸は主にリクエストやレスポンスのイベントの発生順序を表すために実装されている。
+まず、最初に時間軸となるクラスをCode\ref{code:time}のように記述する。
 \begin{lstlisting}[caption=基礎モデルにおける時間軸, label=code:time]
 open util/ordering[Time]
+
 sig Time {}
+
 fact Traces{
 	all t:Time- last | one e:Event | e.pre=t and e.post=t.next
 	all e:Event | e.post=e.pre.next
 }
 \end{lstlisting}
-まず1,2行目において、時間軸上でのある時点を表すクラスをTimeとして作成する。
+ここでは1,3行目において、時間軸上でのある時点を表すクラスをTimeとして作成する。
 ここで、orderingのオプションによりTimeクラスのインスタンスに順序づけが可能となっており、次の順番のインスタンスを表すnext演算子、インスタンスの並びで最初と最後のインスタンスを表すfirst,lastといった演算子が使用可能となっている。
-この記述とCode\ref{code:httpevent}の記述を合わせることで、時間軸を表すTimeとEventとの対応が表現できる（図\ref{fig:existing-model-temporal-logic}参照）。
+この記述とCode\ref{code:httpevent}の記述を合わせることで、時間軸を表すTimeとEventとの対応が表現できる（図\ref{fig:based-model-temporal-logic}参照）。
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=400pt]{./fig/existing-model-temporal-logic.eps}
+\includegraphics[width=400pt]{./fig/based-model-temporal-logic.eps}
 \caption{基礎モデルにおける時間軸とイベントの対応}
-\label{fig:existing-model-temporal-logic}
+\label{fig:based-model-temporal-logic}
 \end{figure}
 \color{black}
 
@@ -229,8 +265,51 @@ Ryckらによって提案されたウェブセキュリティモデル\cite{cook
 、Cookieモデルとする）は、Akhaweらの基礎モデル（\ref{sec:based-model}節参照）を基にCookieの要素を追加したものである。
 
 \subsection{Cookieモデルの能力}
+\color{red}
+Cookieモデルは、拡張元である基礎モデルの能力（\ref{sec:based-model-power}節参照）がベースとなっている。
+基本的に基礎モデルにおいて包括されている項目に関して変更はないが、Cookieを導入したモデルであるため、ウェブセキュリティモデルの三要素の一つである「対象のシステムの構造と動作」にCookieの動作が包括される。
+また、基礎モデルの「安全性要件」に文章上の変更はないが、Security Invariantsにおいて「ウェブの各要素が仕様通りに動作している」ことが求められており、この内容にCookieの動作が追加される。
+\color{black}
+
 \subsection{Cookieモデルにおける時相論理の実装}
+\color{red}
+基礎モデルでは、時相論理はリクエストやレスポンスといったイベントの発生順序を表現するために用いられている。
+Cookieモデルではこれに加えて、リクエストとレスポンス間でのCookieの状態変化を表現するために時相論理を用いている。
+Cookieに対しての時相論理はCode\ref{code:cookie-model-temporal-logic}に示すコードで実装される。
+\begin{lstlisting}[caption=Cookieに対する時相論理, label=code:cookie-model-temporal-logic]
+sig CSState {
+	dst: Origin,
+	cookies: set Cookie
+}
+
+sig CSStateHTTPTransaction extends HTTPTransaction {
+	beforeState: CSState,
+	afterState: CSState
+}{
+	beforeState.dst = afterState.dst
+	afterState.cookies = beforeState.cookies + (resp.headers & SetCookieHeader).thecookie
+	
+	beforeState.dst = req.host
+}
+\end{lstlisting}
+このCookieに関する時相論理は、基礎モデルにおけるCode\ref{code:based-model-httptransaction}を利用して表現されている。
+6~14行目で定義しているCSStateHTTPTransactionは基礎モデルのHTTPTransactionを継承しているクラスであり、対応するリクエストとレスポンス間のCookieの状態変化を表すことができる。
+また、1~4行目で定義されているCSStateは、ある時点でのCookieの状態を表現するクラスであり、CSStateHTTPTransactionはリクエスト、レスポンス時それぞれのCSStateを持つ。
+Cookieはブラウザでのみ使用される要素であるため、これらのCSStateはそのトランザクションのリクエストの送信元のクライアントのCookieの状態を表す。
+%この二つのCSStateの違いを見ることで、あるトランザクションにおけるCookieの変化を捉えることが可能となっている（図\ref{fig:cookie-model-transaction}）。
+この二つのCSStateの違いを見ることで、あるトランザクションにおけるCookieの変化を捉えることが可能となっている（図挿入予定）。
+
+%\begin{figure}[htb]
+%\centering
+%\includegraphics[width=400pt]{./fig/cookie-model-transaction.eps}
+%\caption{CookieモデルにおけるCookieの時間変化の表現}
+%\label{fig:cookie-model-transaction}
+%\end{figure}
+
+\color{black}
 
 \section{既存モデルにおける不足点}
+\color{red}
+\color{black}
 
 \end{document}
