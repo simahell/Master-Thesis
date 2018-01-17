@@ -33,7 +33,6 @@ Akhaweらによって提案されたウェブセキュリティモデル\cite{ba
 ウェブセキュリティモデルにおいて、この項目にはそういった各要素のふるまいが含まれる。
 
 \ref{sec:based-model-abstract}節で述べた通り基礎モデルは現在のウェブの環境において使用される頻度が高いものに限定して注目しており、以下にそれらの要素とそのふるまいを記述する。
-\color{red}
 \begin{itemize}
 \item 非線形時間 \\
 基礎モデルでは、時相論理として非線形時間軸を用いる。詳細は\ref{sec:based-model-temporal-logic}節に記述する。
@@ -65,7 +64,6 @@ DNSは、例えば``www.example.com"というように、複数の名前で形�
 基礎モデルでの安全性解析で主に取り扱うHTTPについては詳細を\ref{sec:based-model-http}節で述べる。
 このHTTPのモデルに加えて、リクエストやレスポンスにはそれを生成したAPIの種類によって異なる安全性要件が生じるため、これらを含めてモデルとして表現する。
 \end{itemize}
-\color{black}
 
 \subsubsection{脅威モデル}
 基礎モデルにおいて脅威モデルとして想定されている攻撃者の能力は三段階に分けられている。
@@ -126,7 +124,6 @@ HTTPリクエストが正当なユーザによって生成されたものであ�
 なぜなら、HTTPサーバは受信したリクエストの内容に基づいて動作するため、そのリクエストが攻撃者によるものでないことを要求するためである。
 \end{itemize}
 
-\color{red}
 \subsection{基礎モデルにおけるHTTPの実装}
 \label{sec:based-model-http}
 
@@ -181,7 +178,7 @@ sig HTTPTransaction {
 HTTPTransactionクラスはリクエストとそれに対応するレスポンスを保有する。
 ただし、リクエストは必ずインスタンスが存在することに対し、レスポンスは一つ存在するか、もしくは存在しない場合がある。
 これは何らかの要因でリクエストに応答がない場合があり、そういった場合には対応するレスポンスが存在しないことを表現している。
-また、7~13行目ではHTTPTransactionが満たすべき条件が記述されており、特に9行目にはリクエストがレスポンスよりも前に発生しているという、時相論理を用いた条件が記述されている。
+また、7-13行目ではHTTPTransactionが満たすべき条件が記述されており、特に9行目にはリクエストがレスポンスよりも前に発生しているという、時相論理を用いた条件が記述されている。
 
 \subsubsection{ネットワークアプリケーション}
 基礎モデルにおいて通信を行うネットワークアプリケーションはCode\ref{code:endpoint}のように表現される。
@@ -230,7 +227,7 @@ lone sig PASSIVEATTACKER extends PassivePrincipal{}
 親クラスであるPrincipalは最も制限のないユーザであり、いくつかのアプリケーションとそれに割り当てられているDNSを保有する。
 このPrincipalを継承するPassivePrincipalはHTTPに従った動作を行うユーザを表し、保有するアプリケーションが全てHTTPに従うことを表している。
 最後に、PassivePrincipalを継承しているWebPrincipalは一般的なユーザを表現するクラスであり、主にHTTPのクライアントのソフトウェアを使用しているクラスとして記述されている。
-また、これらのユーザのクラスの能力に対応して、17~19行目において三種類の攻撃者のクラスが定義されている。
+また、これらのユーザのクラスの能力に対応して、17-19行目において三種類の攻撃者のクラスが定義されている。
 
 \subsection{基礎モデルにおける時相論理の実装}
 \label{sec:based-model-temporal-logic}
@@ -257,7 +254,6 @@ fact Traces{
 \caption{基礎モデルにおける時間軸とイベントの対応}
 \label{fig:based-model-temporal-logic}
 \end{figure}
-\color{black}
 
 \section{Cookieを包括するモデル}
 \subsection{モデルの特徴}
@@ -265,14 +261,11 @@ Ryckらによって提案されたウェブセキュリティモデル\cite{cook
 、Cookieモデルとする）は、Akhaweらの基礎モデル（\ref{sec:based-model}節参照）を基にCookieの要素を追加したものである。
 
 \subsection{Cookieモデルの能力}
-\color{red}
 Cookieモデルは、拡張元である基礎モデルの能力（\ref{sec:based-model-power}節参照）がベースとなっている。
 基本的に基礎モデルにおいて包括されている項目に関して変更はないが、Cookieを導入したモデルであるため、ウェブセキュリティモデルの三要素の一つである「対象のシステムの構造と動作」にCookieの動作が包括される。
 また、基礎モデルの「安全性要件」に文章上の変更はないが、Security Invariantsにおいて「ウェブの各要素が仕様通りに動作している」ことが求められており、この内容にCookieの動作が追加される。
-\color{black}
 
 \subsection{Cookieモデルにおける時相論理の実装}
-\color{red}
 基礎モデルでは、時相論理はリクエストやレスポンスといったイベントの発生順序を表現するために用いられている。
 Cookieモデルではこれに加えて、リクエストとレスポンス間でのCookieの状態変化を表現するために時相論理を用いている。
 Cookieに対しての時相論理はCode\ref{code:cookie-model-temporal-logic}に示すコードで実装される。
@@ -292,20 +285,26 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 	beforeState.dst = req.host
 }
 \end{lstlisting}
-このCookieに関する時相論理は、基礎モデルにおけるCode\ref{code:based-model-httptransaction}を利用して表現されている。
-6~14行目で定義しているCSStateHTTPTransactionは基礎モデルのHTTPTransactionを継承しているクラスであり、対応するリクエストとレスポンス間のCookieの状態変化を表すことができる。
-また、1~4行目で定義されているCSStateは、ある時点でのCookieの状態を表現するクラスであり、CSStateHTTPTransactionはリクエスト、レスポンス時それぞれのCSStateを持つ。
-Cookieはブラウザでのみ使用される要素であるため、これらのCSStateはそのトランザクションのリクエストの送信元のクライアントのCookieの状態を表す。
-%この二つのCSStateの違いを見ることで、あるトランザクションにおけるCookieの変化を捉えることが可能となっている（図\ref{fig:cookie-model-transaction}）。
-この二つのCSStateの違いを見ることで、あるトランザクションにおけるCookieの変化を捉えることが可能となっている（図挿入予定）。
+\color{red}
+このCookieに関する表現は、基礎モデルにおけるCode\ref{code:based-model-httptransaction}を利用している。
+1-4行目で定義されているCSStateは、ある時点でのCookieの状態を表現できるクラスである。
+また、6-14行目で定義しているCSStateHTTPTransactionは基礎モデルのHTTPTransaction（\ref{sec:based-model-http}節参照）を継承しているクラスであり、既存のクラスに上記のCSStateを付加している。
+このCSStateHTTPTransactionにはCSStateを二つ関連付けており、これらはリクエストとレスポンスそれぞれの時点でのブラウザのCookieの状態を表す。
+このように記述することで、リクエストとレスポンスのやり取りにおいて起こりうるCookieの変化を11行目のように記述できる。
+11行目の具体的な内容は以下のようになる。
+\begin{eqnarray}
+C_{req}:\mbox{リクエスト時のCookieの集合} \nonumber\\
+C_{res}:\mbox{レスポンス時のCookieの集合} \nonumber\\
+C_{h}:\mbox{レスポンスのヘッダに含まれるCookieの集合} \nonumber\\
+C_{res} = C_{req} + C_{h} \nonumber
+\end{eqnarray}
 
-%\begin{figure}[htb]
-%\centering
-%\includegraphics[width=400pt]{./fig/cookie-model-transaction.eps}
-%\caption{CookieモデルにおけるCookieの時間変化の表現}
-%\label{fig:cookie-model-transaction}
-%\end{figure}
-
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/cookie-model-transaction.eps}
+\caption{CookieモデルにおけるCookieの時間変化の表現}
+\label{fig:cookie-model-transaction}
+\end{figure}
 \color{black}
 
 \section{既存モデルにおける不足点}
