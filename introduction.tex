@@ -26,11 +26,7 @@
 そもそも、時相論理はシステムの各状態間の関係性を表し、ウェブは時間ごとに状態が刻々と変化するシステムであるため、時相論理による表現は不可欠である。
 しかしながら、これらの既存モデル\cite{based-model,cookie-model}は、Alloy Analyzerという形式手法ツールを用いて実装されており、このツールは時間軸を表現するといった機能を持たない。
 そのためAlloy上で時相論理を表現するには、ツールの機能に頼らない時相論理の記述法が必要となる。
-一方で、既存モデル\cite{based-model}はウェブに対する形式手法の基礎研究として確立されており、またこれを基にしたCookieの研究\cite{cookie-model}を始めとする様々な研究
-\color{red}
-\cite{chaitanya2017formal, bagheri2016practical, chen2015aspire, nelson2013aluminum, somorovsky2011all}
-\color{black}
-が進められているため、これらのモデルを基に拡張を行うことが重要である。
+一方で、既存モデル\cite{based-model}はウェブに対する形式手法の基礎研究として確立されており、またこれを基にしたCookieの研究\cite{cookie-model}を始めとする様々な研究\cite{chaitanya2017formal, bagheri2016practical, chen2015aspire, nelson2013aluminum, somorovsky2011all}が進められているため、これらのモデルを基に拡張を行うことが重要である。
 このような背景から本研究の目的は、Alloyを用いて、より正確な安全性検証のために時相論理の拡張を行ったウェブセキュリティモデルの提案である。
 
 また、本研究では上記の時相論理の表現を加えて、時相論理の実装により表現できる要素としてキャッシュに注目している。

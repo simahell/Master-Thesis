@@ -232,8 +232,8 @@ lone sig PASSIVEATTACKER extends PassivePrincipal{}
 \subsection{基礎モデルにおける時相論理の実装}
 \label{sec:based-model-temporal-logic}
 形式手法ツールAlloyは時間軸を表現する機能を元々持たないので、モデル内に独自に時相論理を記述する必要がある。
-基礎モデルの時間軸は主にリクエストやレスポンスのイベントの発生順序を表すために実装されている。
-まず、最初に時間軸となるクラスをCode\ref{code:time}のように記述する。
+基礎モデルにおいて時相倫理は主にリクエストやレスポンスのイベントの発生順序を表すための時間軸の導入に利用されている。
+まず、最初に時間軸となるTimeクラスをCode\ref{code:time}のように記述する。
 \begin{lstlisting}[caption=基礎モデルにおける時間軸, label=code:time]
 open util/ordering[Time]
 
@@ -244,7 +244,7 @@ fact Traces{
 	all e:Event | e.post=e.pre.next
 }
 \end{lstlisting}
-ここでは1,3行目において、時間軸上でのある時点を表すクラスをTimeとして作成する。
+1,3行目のTimeクラスは時間軸上でのある時点を表す。
 ここで、orderingのオプションによりTimeクラスのインスタンスに順序づけが可能となっており、次の順番のインスタンスを表すnext演算子、インスタンスの並びで最初と最後のインスタンスを表すfirst,lastといった演算子が使用可能となっている。
 この記述とCode\ref{code:httpevent}の記述を合わせることで、時間軸を表すTimeとEventとの対応が表現できる（図\ref{fig:based-model-temporal-logic}参照）。
 
@@ -256,6 +256,7 @@ fact Traces{
 \end{figure}
 
 \section{Cookieを包括するモデル}
+\label{sec:cookie-model}
 \subsection{モデルの特徴}
 Ryckらによって提案されたウェブセキュリティモデル\cite{cookie-model}（以下
 、Cookieモデルとする）は、Akhaweらの基礎モデル（\ref{sec:based-model}節参照）を基にCookieの要素を追加したものである。
@@ -267,7 +268,7 @@ Cookieモデルは、拡張元である基礎モデルの能力（\ref{sec:based
 
 \subsection{Cookieモデルにおける時相論理の実装}
 基礎モデルでは、時相論理はリクエストやレスポンスといったイベントの発生順序を表現するために用いられている。
-Cookieモデルではこれに加えて、リクエストとレスポンス間でのCookieの状態変化を表現するために時相論理を用いている。
+Cookieモデルではこれに加えて、対応するリクエストとレスポンス間でのCookieの状態変化を表現するために時相論理を用いている。
 Cookieに対しての時相論理はCode\ref{code:cookie-model-temporal-logic}に示すコードで実装される。
 \begin{lstlisting}[caption=Cookieに対する時相論理, label=code:cookie-model-temporal-logic]
 sig CSState {
@@ -292,12 +293,16 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 このCSStateHTTPTransactionにはCSStateを二つ関連付けており、これらはリクエストとレスポンスそれぞれの時点でのブラウザのCookieの状態を表す。
 このように記述することで、リクエストとレスポンスのやり取りにおいて起こりうるCookieの変化を11行目のように記述できる。
 11行目の具体的な内容は以下のようになる。
-\begin{eqnarray}
-C_{req}:\mbox{リクエスト時のCookieの集合} \nonumber\\
-C_{res}:\mbox{レスポンス時のCookieの集合} \nonumber\\
-C_{h}:\mbox{レスポンスのヘッダに含まれるCookieの集合} \nonumber\\
-C_{res} = C_{req} + C_{h} \nonumber
-\end{eqnarray}
+\begin{eqnarray*}
+& C_{res} = C_{req} + C_{h} &\\
+& \left(
+\begin{array}{l}
+	C_{req} : \mbox{リクエスト時のCookieの集合}\\
+	C_{res} : \mbox{レスポンス時のCookieの集合}\\
+	C_{h} : \mbox{レスポンスのヘッダに含まれるCookieの集合}
+\end{array}
+\right) &
+\end{eqnarray*}
 
 \begin{figure}[htb]
 \centering
@@ -307,8 +312,36 @@ C_{res} = C_{req} + C_{h} \nonumber
 \end{figure}
 \color{black}
 
-\section{既存モデルにおける不足点}
+\section{既存モデルにおける問題点}
 \color{red}
+\ref{sec:based-model}、\ref{sec:cookie-model}節の二つの既存モデルの時相論理の表現能力には問題点がある。
+それぞれの既存モデルの時相論理の表現能力は以下のようになっている。
+\begin{itemize}
+\item 基礎モデル \\
+リクエストやレスポンスの発生順序を表現するための時間軸
+\item Cookieモデル \\
+対応するリクエストとレスポンス間でのCookieの状態変化
+\end{itemize}
+これらの時相論理の能力では、状態変化はある同一のTransaction間でのみ表現することができ、異なるTransactionにその状態を引き継ぐことはできない。
+具体的には図\ref{fig:2transaction-a}のような状況が考えられる。
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/2transaction-a.eps}
+\caption{Cookieモデルで表現できる状態変化の一例}
+\label{fig:2transaction-a}
+\end{figure}
+図\ref{fig:2transaction-a}は、ある同一のブラウザからリクエストが二つ連続して送信され、後に送信したリクエストに対するレスポンスが先に行われた状況を表している。
+Cookieモデルでの表現能力では、図\ref{fig:2transaction-a}内で示している通りCSState1からCSState3へ、CSState2からCSState4への保有するCookieの集合の変化を表現できる。
+しかし、この表現能力ではCSState3で格納されたCookie1がCSState4で格納されていること（図\ref{fig:2transaction-b}のような状態）は起こりえない。
+なぜなら、CSState4はCSState3で生じた状態変化を捉えることができないためである。
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/2transaction-b.eps}
+\caption{Cookieモデルで表現できない状態変化の一例}
+\label{fig:2transaction-b}
+\end{figure}
+こういった表現できない状態が存在する場合、形式手法で得られた結果に潜在的な危険性が含まれる可能性がある。
+したがって、図\ref{fig:2transaction-b}に示すように時間軸に沿った状態変化を捉えられるべきである。
+本研究ではこのように時間軸に沿った状態変化をAlloyで実現するための記述法を提案する。
 \color{black}
-
 \end{document}
