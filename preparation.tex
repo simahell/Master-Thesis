@@ -1,6 +1,7 @@
 \documentclass[12pt,a4paper]{jbook}
 \input{settings}
 \begin{document}
+\newpage
 
 \chapter{準備}
 \section{形式手法}
@@ -60,7 +61,7 @@ CTL*はパス論理式、及び、状態論理式のどちらも表現可能で�
 \end{itemize}
 
 \section{World Wide Web}
-World Wide Web（以下、ウェブとする）はインターネットにおいてHTMLで記述されているドキュメントのサービスを提供するシステムである。
+World Wide Web（以下、「ウェブ」とする）はインターネットにおいてHTMLで記述されているドキュメントのサービスを提供するシステムである。
 このHTMLはハイパーテキストを記述するための言語であり、ハイパーテキストとはあるドキュメント内に別のドキュメントへのリンクを埋め込み、ドキュメント間の関連性を表現可能とする技術である。
 また、ウェブにおいてはそのリンクを用いてインターネットに存在する様々なドキュメントの繋がりを表現し、参照先のドキュメントの表示やダウンロードを容易にする。
 また、この利便性に加えて、ウェブを利用するためのソフトウェアであるブラウザや検索エンジンの技術向上により、ウェブは急速に普及し現代社会において不可欠なものとなっている。
@@ -93,7 +94,7 @@ World Wide Web（以下、ウェブとする）はインターネットにおい
 \end{enumerate}
 
 \subsection{キャッシュを利用する攻撃}
-キャッシュを利用した攻撃の一例としてBrowser Cache Poisoning攻撃（以下、BCP攻撃とする）\cite{bcpattack}を取り上げる。
+キャッシュを利用した攻撃の一例としてBrowser Cache Poisoning攻撃（以下、「BCP攻撃」とする）\cite{bcpattack}を取り上げる。
 BCP攻撃はクライアントとサーバの経路上に攻撃者である第三者が割り込んで行う、中間者攻撃に該当する。
 このBCP攻撃の基本的な手順は以下の通りである。
 \begin{enumerate}
@@ -110,7 +111,7 @@ BCP攻撃の特徴は、まず攻撃者が実際に行動するのはレスポ�
 \section{Hypertext Transfer Protocol}
 \label{sec:http}
 \subsection{プロトコルの概要}
-Hypertext Transfer Protocol（以下、HTTPとする）は様々なデータの形式や通信目的に共通して対応できる汎用的な通信を実現するためのプロトコルとして設計された。
+Hypertext Transfer Protocol（以下、「HTTP」とする）は様々なデータの形式や通信目的に共通して対応できる汎用的な通信を実現するためのプロトコルとして設計された。
 このHTTPは、ウェブの環境に合わせて仕様変更がなされており様々なバージョンが存在する。
 本研究では、現在一般的に使用されることが多いHTTP/1.1\cite{rfc7230,rfc7231,rfc7232,rfc7233,rfc7234,rfc7235}と、その下位互換性を考慮しHTTP/1.0\cite{rfc1945}を対象に考える。
 
@@ -162,7 +163,7 @@ HTTP通信ではクライアントとレスポンスの経路間で複数のプ�
 
 \subsection{HTTP Over TLS}
 \label{sec:https}
-HTTP Over TLS\cite{https}（以下、HTTPSとする）は、簡単に通信内容を傍受される可能性のあるHTTPを拡張し、安全性を向上させた暗号通信プロトコルである。
+HTTP Over TLS\cite{https}（以下、「HTTPS」とする）は、簡単に通信内容を傍受される可能性のあるHTTPを拡張し、安全性を向上させた暗号通信プロトコルである。
 HTTPに以下の機能を持つSecure Socket Layer/Transport Layer Security(SSL/TLS)を加えることで通信の安全性を確保している。
 \begin{itemize}
 \item 通信内容の暗号化

@@ -20,7 +20,7 @@
 
 \subsection{モデルの特徴}
 \label{sec:based-model-abstract}
-Akhaweらによって提案されたウェブセキュリティモデル\cite{based-model}（以下、基礎モデルとする）は、今後ウェブの安全性解析に形式手法を用いるために設計されたモデルである。
+Akhaweらによって提案されたウェブセキュリティモデル\cite{based-model}（以下、「基礎モデル」とする）は、今後ウェブの安全性解析に形式手法を用いるために設計されたモデルである。
 しかし、ウェブで運用されている要素の数は膨大であるため、現在の環境で頻繁に使用されている要素に注目して設計されている。
 
 \subsection{基礎モデルの能力}
@@ -251,15 +251,14 @@ fact Traces{
 \begin{figure}[htb]
 \centering
 \includegraphics[width=400pt]{./fig/based-model-temporal-logic.eps}
-\caption{基礎モデルにおける時間軸とイベントの対応}
+\caption{基礎モデルにおける時間軸とイベントの関係}
 \label{fig:based-model-temporal-logic}
 \end{figure}
 
 \section{Cookieを包括するモデル}
 \label{sec:cookie-model}
 \subsection{モデルの特徴}
-Ryckらによって提案されたウェブセキュリティモデル\cite{cookie-model}（以下
-、Cookieモデルとする）は、Akhaweらの基礎モデル（\ref{sec:based-model}節参照）を基にCookieの要素を追加したものである。
+Ryckらによって提案されたウェブセキュリティモデル\cite{cookie-model}（以下、「Cookieモデル」とする）は、Akhaweらの基礎モデル（\ref{sec:based-model}節参照）を基にCookieの要素を追加したものである。
 
 \subsection{Cookieモデルの能力}
 Cookieモデルは、拡張元である基礎モデルの能力（\ref{sec:based-model-power}節参照）がベースとなっている。
@@ -313,6 +312,7 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 \color{black}
 
 \section{既存モデルにおける問題点}
+\label{sec:existing-models-problems}
 \color{red}
 \ref{sec:based-model}、\ref{sec:cookie-model}節の二つの既存モデルの時相論理の表現能力には問題点がある。
 それぞれの既存モデルの時相論理の表現能力は以下のようになっている。

@@ -1,10 +1,152 @@
 \documentclass[12pt,a4paper]{jbook}
 \input{settings}
 \begin{document}
+\newpage
 
 \chapter{提案モデル}
-\section{時相論理の表現}
-\section{時相論理を用いたキャッシュの表現}
+\color{red}
+この章では、ウェブの様々な要素に利用可能なAlloyでの時相論理の記述法と、その応用例としてキャッシュを実装したウェブセキュリティモデルを提案する。
+\color{black}
+
+\section{汎用的な時相論理のAlloy上の記述法の提案}
+\label{sec:ProposedModel-TemporalLogic}
+\color{red}
+前述の\ref{sec:existing-models-problems}節における既存モデルの時相論理の表現能力の問題点は、「異なるTransaction間での状態変化を表現できない」ことである。
+この問題を解決するため、以下の表現能力を持つ時相論理の実現を目標とする。
+\begin{itemize}
+\item Transactionの関係に関わらず、時間軸上で直前にあたる状態からの変化
+\item 初期状態が満たしているべき条件
+\end{itemize}
+
+そもそも、既存モデルが同一のTransaction間の状態変化のみの表現能力となっているのは、状態を表すクラス（CookieモデルにけるCSStateクラス）間の時間軸上での順序の表現を、ツールの機能を利用しない論理式で実現することが難しいためである。
+したがって、状態を表すクラス間の時間軸上の関係性を表現できる述語が必要となる。
+また、CSStateクラスはCookieの状態を表現するためのクラスであり、CSStateのみに利用できる述語では他のウェブの要素に汎用的に利用できない。
+以上より、様々なウェブの要素の状態を表現するための汎用クラスを定義し、そのクラスに利用可能な述語を作成する。
+
+また、本記述法を用いる上で基礎モデルでの時間軸の表現（\ref{sec:based-model-temporal-logic}節参照）を一部変更している。
+その変更点についても以降で述べる。
+
+\subsubsection{時間軸の表現の変更}
+基礎モデル\cite{based-model}においては、時間軸を表すTimeクラスにネットワーク上で発生するレスポンスやリクエストを表すEventクラスが関連付けられている。
+これらのクラス間の関係性は、「ある時点Time0とTime1の間でEvent0が発生した」といった内容を表現できるというものであり、二つのTimeクラスのインスタンスで一つのイベントの時刻を表現できる。
+
+しかし、本提案モデルではEventクラスに加えて、ある時点におけるウェブの要素の状態を表すStateクラスも時間軸に関連付けられる。
+ここで、二つのTimeクラスのインスタンスで一つのイベントの時刻を表現するという既存モデルの関係性を維持すると、導入する述語の論理式が複雑となり実装が困難となる。
+したがって、本提案モデルでは図\ref{fig:ProposedModel-TimeClass}に示す、一つのTimeクラスのインスタンスでイベントの時刻を表現できる記述法に変更する。
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/ProposedModel-TimeClass.eps}
+\caption{提案モデルにおける時間軸とイベントの関係}
+\label{fig:ProposedModel-TimeClass}
+\end{figure}
+
+この記述の変更によって、二つの既存モデルそれぞれにおける時相論理の表現能力に変更はない。
+そもそも、基礎モデルで二つのTimeクラスのインスタンスを利用する関係性とした理由は、今後の拡張において「リクエストやレスポンスといったイベントが同時刻で発生しない」という基礎モデルの制限を無くすことを想定したためである。
+本提案モデルにおいてもこの制限事項は継承しているが、一つのTimeクラスのインスタンスによる表現としたとしても、同じTimeクラスのインスタンスとの関係を持つEventクラスのインスタンスが複数存在することを許容することで今後の拡張は可能である。
+つまり、この変更によって既存モデルの表現能力と拡張性を妨げない。
+
+\subsubsection{状態を表現する汎用クラス}
+導入する汎用クラスとしてCode\ref{code:StateClass}に示すStateクラスを定義する。
+flowはStateクラス同士を接続し状態の遷移を、currentはその状態となり得る時刻を表す。
+また、その他の項目としてEqItem、DifItemクラスをStateクラスの変数としている。
+\begin{lstlisting}[caption=Stateクラス, label=code:StateClass]
+abstract sig State{
+	flow: set State,
+	eq: one EqItem,
+	dif: one DifItem,
+	current: set Time
+}
+abstract sig EqItem{}
+abstract sig DifItem{}
+sig StateTransaction extends HTTPTransaction{
+	beforeState: set State,
+	afterState: set State
+}
+\end{lstlisting}
+
+まず、EqItemは同一の状態遷移上で変化しない要素（以下、「一致要素」とする）を表すクラスである。
+一致要素は複数のStateが存在する場合に、いずれのStateが同一の遷移であるのかを判定するために必要である。
+例えばStateが三つ存在している場合を考えると、図\ref{fig:ProposedModel-3StateFlow}に挙げられるように複数の遷移のパターンが考えられる。
+ここで、EqItemをStateごとに比較をすることで、同一のEqItemを持つStateを同一の遷移に存在すると判定することができる。
+図\ref{fig:ProposedModel-3StateFlow}を例にとると、三状態が同一の遷移に存在する場合にはState0,1,2のEqItemがすべて同じとなる。
+一方で、三状態が同一の遷移に存在しない場合にはState0,2のEqItemが同じであり、State1のEqItemはそれと異なる。
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=400pt]{./fig/ProposedModel-3StateFlow.eps}
+\caption{3Stateによる遷移の例}
+\label{fig:ProposedModel-3StateFlow}
+\end{figure}
+
+また、DifItemは状態遷移において変化する要素（以下、「変化要素」とする）を表すクラスである。
+状態変化をモデルで表現した際に捉えたい項目をDifItemに記述する。
+
+最後に、これらのStateはCookieモデルと同様にHTTPTransactionに関連付けることで、レスポンスとリクエスト時の状態を表す。
+したがって、HTTPTransactionを継承しStateクラスを持つStateTransactionをCode\ref{code:StateClass}の9-12行目で定義している。
+
+このStateクラスを利用してウェブの要素の状態遷移を考えるには、State、EqItem、DifItemクラスを継承するその要素専用のクラスを定義する。
+また、その要素について一致要素と変化要素を明らかにしておき、継承後のクラスに記述する。
+以下のCode\ref{code:CookieClass}はCookieモデルを基にしたCookieへの応用例である。
+2,3行目に記すように、Stateを継承するクラスではeqとdifもまた、EqItem、DifItemを継承する専用のクラスに含まれるように条件を記述する。
+Cookieモデルでは、一致要素がクライアント、変化要素がCookieの集合となっている。
+これは、各クライアント毎にでCookieの保存が行われているため、状態遷移の上でクライアントは変更されないためである。
+また、変化要素は変化を捉えたい要素である、クライアント内で保存されているCookieを表現している。
+\begin{lstlisting}[caption=Cookieへの応用例, label=code:CookieClass]
+sig CookieState extends State{}{
+	eq in CookieEqItem
+	dif in CookieDifItem
+}
+sig CookieEqItem extends EqItem{
+	client: one HTTPClient
+}
+sig CookieDifItem extends DifItem{
+	cookie: set Cookie
+}
+\end{lstlisting}
+
+\subsubsection{状態の順序を表現する述語}
+既述したStateクラスを継承することで、そのクラスでは状態遷移上の関係性を判定する二つの述語を利用できる。
+
+まずは、状態遷移上で直前となる状態を判定する述語JustBeforeStateである（Code\ref{code:JustBeforeState}参照）。
+このJustBeforeStateは三つの引数を要する。
+そのうちの二つはStateであり、それぞれpre、postと表し、preがpostの直前の状態であるか考える。
+しかし、postが複数の時刻を持つ場合があり、この場合には二つのStateの入力では複数の組み合わせで真となる。
+そこで、postの時刻を指定するため、StateTransactionを引数に追加する。
+これにより、与えられたトランザクションに含まれるpostの時刻に限定して、その時刻においてpreが直前であるか判定でき、真となる組み合わせが一意に定まる。
+\begin{lstlisting}[caption=状態遷移において直前の状態を判定する述語, label=code:JustBeforeState]
+pred JustBeforeState[pre:State, post:State, str:StateTransaction]{
+	pre.eq = post.eq
+	post in str.(beforeState + afterState)
+
+	some t,t':Time |
+		{
+			t in pre.current
+			t' in str.(request + response + re_res).current
+			t' in str.request.current implies post in str.beforeState
+			t' in str.(response + re_res).current implies post in str.afterState
+			t' in t.next.*next
+
+			all s:State, t'':Time |
+				(s.eq = pre.eq and t'' in s.current) implies
+						(t in t''.*next) or (t'' in t'.*next)
+		}
+}
+\end{lstlisting}
+JustBeforeStateの内部の論理を以下に述べる。
+
+\begin{lstlisting}[caption=状態遷移において初期状態を判定する述語, label=code:FirstState]
+pred FirstState[s:State]{
+	all s':State |
+		s.eq = s'.eq implies
+			s'.current in s.current.*next	//s => s'
+}
+\end{lstlisting}
+
+\section{時相論理の提案記述法を用いたキャッシュの表現}
+
+\color{black}
+
 \section{中継者の表現}
 \section{制限事項}
 
