@@ -11,17 +11,21 @@
 \section{汎用的な時相論理のAlloy上の記述法の提案}
 \label{sec:ProposedModel-TemporalLogic}
 \color{red}
-前述の\ref{sec:existing-models-problems}節における既存モデルの時相論理の表現能力の問題点は、「異なるTransaction間での状態変化を表現できない」ことである。
-この問題を解決するため、以下の表現能力を持つ時相論理の実現を目標とする。
-\begin{itemize}
-\item Transactionの関係に関わらず、時間軸上で直前にあたる状態からの変化
-\item 初期状態が満たしているべき条件
-\end{itemize}
-
+前述の\ref{sec:existing-models-problems}節における既存モデルの時相論理の表現能力の問題点は、「時間軸全体を通して状態変化を追うことができない」ことである。
 そもそも、既存モデルが同一のTransaction間の状態変化のみの表現能力となっているのは、状態を表すクラス（CookieモデルにけるCSStateクラス）間の時間軸上での順序の表現を、ツールの機能を利用しない論理式で実現することが難しいためである。
 したがって、状態を表すクラス間の時間軸上の関係性を表現できる述語が必要となる。
-また、CSStateクラスはCookieの状態を表現するためのクラスであり、CSStateのみに利用できる述語では他のウェブの要素に汎用的に利用できない。
-以上より、様々なウェブの要素の状態を表現するための汎用クラスを定義し、そのクラスに利用可能な述語を作成する。
+また、CookieモデルにおけるCSStateクラスはCookieの状態を表現するためのクラスであり、CSStateのみに利用できる述語では今後の他のウェブの要素に利用できない。
+以上より、様々なウェブの要素の状態を表現するための汎用的なクラスを定義し、そのクラスに利用可能な述語を作成する。
+
+また、時間軸全体を通して状態変化を表現するためには必要となる述語を考える。
+まず、ある状態からその直前の状態を判定できれば、「前後の二状態で起こりうる変化」を表現可能になる。
+これに加えて状態遷移の初期状態を判定できれば、「初期状態にかかる条件（初期条件）」を表現可能になる。
+これら二つの表現能力を組み合わせることで、帰納的に時間軸全体で起こりうる状態変化を表現可能となる。
+したがって、これらの表現能力を実装するため、以下の述語を作成する。
+\begin{itemize}
+\item Transactionの関係に関わらず、直前にあたる状態を判定する述語
+\item 初期状態を判定する述語
+\end{itemize}
 
 また、本記述法を用いる上で基礎モデルでの時間軸の表現（\ref{sec:based-model-temporal-logic}節参照）を一部変更している。
 その変更点についても以降で述べる。
@@ -105,14 +109,13 @@ sig CookieDifItem extends DifItem{
 }
 \end{lstlisting}
 
-\subsubsection{状態の順序を表現する述語}
-既述したStateクラスを継承することで、そのクラスでは状態遷移上の関係性を判定する二つの述語を利用できる。
-
-まずは、状態遷移上で直前となる状態を判定する述語JustBeforeStateである（Code\ref{code:JustBeforeState}参照）。
+\subsubsection{直前状態を判定する述語}
+上記のStateクラスに対して、状態遷移上で直前となる状態を判定する述語JustBeforeStateを利用できる（Code\ref{code:JustBeforeState}参照）。
 このJustBeforeStateは三つの引数を要する。
-そのうちの二つはStateであり、それぞれpre、postと表し、preがpostの直前の状態であるか考える。
+そのうちの二つはStateクラスでありそれぞれpre、postと表す。
+述語JustBeforeStateはpreがpostの直前の状態であるか考える。
 しかし、postが複数の時刻を持つ場合があり、この場合には二つのStateの入力では複数の組み合わせで真となる。
-そこで、postの時刻を指定するため、StateTransactionを引数に追加する。
+そこで、postの時刻を指定するため、StateTransactionを引数に追加する（これをstrとする）。
 これにより、与えられたトランザクションに含まれるpostの時刻に限定して、その時刻においてpreが直前であるか判定でき、真となる組み合わせが一意に定まる。
 \begin{lstlisting}[caption=状態遷移において直前の状態を判定する述語, label=code:JustBeforeState]
 pred JustBeforeState[pre:State, post:State, str:StateTransaction]{
@@ -133,21 +136,27 @@ pred JustBeforeState[pre:State, post:State, str:StateTransaction]{
 		}
 }
 \end{lstlisting}
-JustBeforeStateの内部の論理を以下に述べる。
+この述語JustBeforeStateが真となる条件は以下の三つに分割でき、引数がすべてを満たす場合に述語JustBeforeStateも真となる。
+\begin{itemize}
+\item preとpostの一致要素が同一であること（2行目）
+\item postがstrのbeforeState、afterStateのいずれかに属していること（3行目）
+\item preの時刻とpostのstrにおける時刻の間に、一致要素が同一の他の状態が存在しないこと（5-16行目）
+\end{itemize}
 
-\begin{lstlisting}[caption=状態遷移において初期状態を判定する述語, label=code:FirstState]
-pred FirstState[s:State]{
-	all s':State |
-		s.eq = s'.eq implies
-			s'.current in s.current.*next	//s => s'
-}
-\end{lstlisting}
+%\subsubsection{初期状態を判定する述語}
+%Stateクラスに対して利用可能な、もう一方の述語は初期状態を判定する述語FirstStateである（Code\ref{code:FirstState}参照）。
+%\begin{lstlisting}[caption=状態遷移において初期状態を判定する述語, label=code:FirstState]
+%pred FirstState[s:State]{
+%	all s':State |
+%		s.eq = s'.eq implies
+%			s'.current in s.current.*next	//s => s'
+%}
+%\end{lstlisting}
 
-\section{時相論理の提案記述法を用いたキャッシュの表現}
 
+\section{提案記述法を用いたキャッシュの実装}
+\section{中継者の実装}
 \color{black}
-
-\section{中継者の表現}
-\section{制限事項}
+\section{提案モデルの制限事項}
 
 \end{document}
