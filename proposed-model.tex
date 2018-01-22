@@ -137,15 +137,15 @@ pred JustBeforeState[pre:State, post:State, str:StateTransaction]{
 
 また、この述語JustBeforeStateが真となる条件は以下の三つに分割でき、引数がすべてを満たす場合に述語JustBeforeStateも真となる。
 \begin{itemize}
-\item preとpostの一致要素が同一であること（2行目）
-\item postがstrのbeforeState、afterStateのいずれかに属していること（3行目）
-\item preの時刻とpostのstrにおける時刻の間の時刻を持つ、一致要素が同一の他の状態が存在しないこと（5-16行目）
+\item preとpostの一致要素が同一である（2行目）
+\item postがstrのbeforeState、afterStateのいずれかに属している（3行目）
+\item preの時刻とpostのstrにおける時刻の間の時刻を持つ、一致要素が同一の他の状態が存在しない（5-16行目）
 \end{itemize}
 
 \subsubsection{初期状態を判定する述語}
 Stateクラスに対して利用可能な、もう一方の述語は初期状態を判定する述語FirstStateである（Code\ref{code:FirstState}参照）。
 引数としてStateクラスが与えられ（これをsとする）、それが初期状態であるか判定する。
-また、一致要素が異なると状態変化がそれぞれ独立するため、それぞれに対して初期状態が生じる。
+また、一致要素が異なると状態変化がそれぞれ独立するため、それぞれに対して初期状態が生じる（図\ref{fig:FirstState}）。
 \begin{lstlisting}[caption=状態遷移において初期状態を判定する述語, label=code:FirstState]
 pred FirstState[s:State]{
 	all s':State |
@@ -154,6 +154,13 @@ pred FirstState[s:State]{
 }
 \end{lstlisting}
 \color{black}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=400pt]{./fig/FirstState.eps}
+\caption{FirstStateの動作例}
+\label{fig:FirstState}
+\end{figure}
 
 \section{提案記述法を用いたキャッシュの実装}
 \section{中継者の実装}
