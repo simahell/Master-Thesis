@@ -4,13 +4,10 @@
 \newpage
 
 \chapter{提案モデル}
-\color{red}
 この章では、ウェブの様々な要素に利用可能なAlloyでの時相論理の記述法と、その応用例としてキャッシュを実装したウェブセキュリティモデルを提案する。
-\color{black}
 
 \section{汎用的な時相論理のAlloy上の記述法の提案}
 \label{sec:ProposedModel-TemporalLogic}
-\color{red}
 前述の\ref{sec:existing-models-problems}節における既存モデルの時相論理の表現能力の問題点は、「時間軸全体を通して状態変化を追うことができない」ことである。
 そもそも、既存モデルが同一のTransaction間の状態変化のみの表現能力となっているのは、状態を表すクラス（CookieモデルにけるCSStateクラス）間の時間軸上での順序の表現を、ツールの機能を利用しない論理式で実現することが難しいためである。
 したがって、状態を表すクラス間の時間軸上の関係性を表現できる述語が必要となる。
@@ -79,7 +76,7 @@ sig StateTransaction extends HTTPTransaction{
 \begin{figure}[htb]
 \centering
 \includegraphics[width=400pt]{./fig/ProposedModel-3StateFlow.eps}
-\caption{3Stateによる遷移の例}
+\caption{3状態間における遷移の一例}
 \label{fig:ProposedModel-3StateFlow}
 \end{figure}
 
@@ -109,6 +106,7 @@ sig CookieDifItem extends DifItem{
 }
 \end{lstlisting}
 
+\color{red}
 \subsubsection{直前状態を判定する述語}
 上記のStateクラスに対して、状態遷移上で直前となる状態を判定する述語JustBeforeStateを利用できる（Code\ref{code:JustBeforeState}参照）。
 このJustBeforeStateは三つの引数を要する。
@@ -155,11 +153,10 @@ pred FirstState[s:State]{
 			s'.current in s.current.*next
 }
 \end{lstlisting}
-
+\color{black}
 
 \section{提案記述法を用いたキャッシュの実装}
 \section{中継者の実装}
-\color{black}
 \section{提案モデルの制限事項}
 
 \end{document}

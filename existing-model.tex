@@ -286,7 +286,6 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 	beforeState.dst = req.host
 }
 \end{lstlisting}
-\color{red}
 このCookieに関する表現は、基礎モデルにおけるCode\ref{code:based-model-httptransaction}を利用している。
 1-4行目で定義されているCSStateは、ある時点でのCookieの状態を表現できるクラスである。
 また、6-14行目で定義しているCSStateHTTPTransactionは基礎モデルのHTTPTransaction（\ref{sec:based-model-http}節参照）を継承しているクラスであり、既存のクラスに上記のCSStateを付加している。
@@ -310,11 +309,9 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 \caption{CookieモデルにおけるCookieの時間変化の表現}
 \label{fig:cookie-model-transaction}
 \end{figure}
-\color{black}
 
 \section{既存モデルにおける問題点}
 \label{sec:existing-models-problems}
-\color{red}
 \ref{sec:based-model}、\ref{sec:cookie-model}節の二つの既存モデルの時相論理の表現能力には問題点がある。
 それぞれの既存モデルの時相論理の表現能力は以下のようになっている。
 \begin{itemize}
@@ -344,5 +341,4 @@ Cookieモデルでの表現能力では、図\ref{fig:2transaction-a}内で示�
 こういった表現できない状態が存在する場合、形式手法で得られた結果に潜在的な危険性が含まれる可能性がある。
 したがって、図\ref{fig:2transaction-b}に示すように時間軸に沿った状態変化を捉えられるべきである。
 本研究ではこのように時間軸に沿った状態変化をAlloyで実現するための記述法を提案する。
-\color{black}
 \end{document}
