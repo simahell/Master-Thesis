@@ -118,7 +118,28 @@ Gadget Attackerは中継者とキャッシュに関する能力は上記のNetwo
 \ref{sec:ProposedModel-Power}節で述べた提案モデルの能力を基に、時相論理を用いてキャッシュを表現する。
 
 \subsection{キャッシュのクラスを作成}
+キャッシュを表すクラスをCode\ref{code:CacheClass}のように記述する。
+また、キャッシュを搭載するため、Code\ref{code:EndPoint}のように、構成要素のクラスを変更する。
+\begin{lstlisting}[caption=Cacheクラス, label=code:CacheClass]
+abstract sig Cache{}
+sig PrivateCache extends Cache{}
+sig PublicCache extends Cache{}
+\end{lstlisting}
 
+\begin{lstlisting}[caption=ウェブの構成要素, label=code:EndPoint]
+abstract sig NetworkEndpoint{}
+abstract sig HTTPConformist extends NetworkEndpoint{cache : lone Cache}
+sig HTTPServer extends HTTPConformist{}
+abstract sig HTTPClient extends HTTPConformist{
+	owner:WebPrincipal
+}
+sig Browser extends HTTPClient {
+	trustedCA : set certificateAuthority
+}
+abstract sig HTTPIntermediary extends HTTPConformist{}
+sig HTTPProxy extends HTTPIntermediary{}
+sig HTTPGateway extends HTTPIntermediary{}
+\end{lstlisting}
 
 \subsection{キャッシュの状態を表すクラス}
 時間軸上の各時点におけるキャッシュの状態を表現するクラスを作成する。
