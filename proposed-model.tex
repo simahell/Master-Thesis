@@ -105,10 +105,6 @@ Gadget Attackerは中継者とキャッシュに関する能力は上記のNetwo
 \end{itemize}
 
 また、正当なユーザのふるまいに対する制限に特に変更は加えない。
-%また、正当なユーザのふるまいとして以下の制限を置く。
-%\begin{itemize}
-%\item 
-%\end{itemize}
 
 \subsection{安全性要件}
 基礎モデルには二つの安全性要件が設定されており、これらの変更はない。
@@ -117,35 +113,109 @@ Gadget Attackerは中継者とキャッシュに関する能力は上記のNetwo
 \section{キャッシュの実装}
 \ref{sec:ProposedModel-Power}節で述べた提案モデルの能力を基に、時相論理を用いてキャッシュを表現する。
 
-\subsection{キャッシュのクラスを作成}
+\subsection{キャッシュクラスの作成}
 キャッシュを表すクラスをCode\ref{code:CacheClass}のように記述する。
-また、キャッシュを搭載するため、Code\ref{code:EndPoint}のように、構成要素のクラスを変更する。
+抽象クラスとしてCacheクラスを定義し、個人キャッシュを表すPrivateCacheクラス、共有キャッシュを表すPublicCacheクラスを定義する。
+
 \begin{lstlisting}[caption=Cacheクラス, label=code:CacheClass]
 abstract sig Cache{}
 sig PrivateCache extends Cache{}
 sig PublicCache extends Cache{}
 \end{lstlisting}
 
-\begin{lstlisting}[caption=ウェブの構成要素, label=code:EndPoint]
-abstract sig NetworkEndpoint{}
+また、CacheクラスにはCode\ref{code:LimitedCacheClass}に記述する制限を付与する。
+付与される制限は以下の二点である。
+\begin{itemize}
+\item どのネットワーク上の端末にも属さないキャッシュは存在しない（1-4行目）
+\item 個人キャッシュはクライアントに属し、共有キャッシュはサーバ、もしくは中継者に属する（6-9行目）
+\end{itemize}
+
+\begin{lstlisting}[caption=Cacheクラスの制限, label=code:LimitedCacheClass]
+fact noOrphanedCaches {
+	all c:Cache |
+		one e:NetworkEndpoint | c = e.cache
+}
+
+fact PublicAndPrivate{
+	all pri:PrivateCache | pri in HTTPClient.cache
+	all pub:PublicCache | (pub in HTTPServer.cache) or (pub in HTTPIntermediary.cache)
+}
+\end{lstlisting}
+
+また、キャッシュを搭載するため、Code\ref{code:EndPoint}のように、構成要素のクラスを変更する。
+HTTPにおけるクライアント、サーバ、中継者を包括するHTTPConfirmistクラスにCacheクラスを追加する。
+また、このとき各端末は多くとも一台のキャッシュしか保有することができないものとする。
+\begin{lstlisting}[caption=HTTPを利用するウェブの構成要素, label=code:EndPoint]
 abstract sig HTTPConformist extends NetworkEndpoint{cache : lone Cache}
-sig HTTPServer extends HTTPConformist{}
-abstract sig HTTPClient extends HTTPConformist{
-	owner:WebPrincipal
-}
-sig Browser extends HTTPClient {
-	trustedCA : set certificateAuthority
-}
-abstract sig HTTPIntermediary extends HTTPConformist{}
-sig HTTPProxy extends HTTPIntermediary{}
-sig HTTPGateway extends HTTPIntermediary{}
 \end{lstlisting}
 
 \subsection{キャッシュの状態を表すクラス}
-時間軸上の各時点におけるキャッシュの状態を表現するクラスを作成する。
+Code\ref{code:CacheStateClass}のように、時間軸上の各時点におけるキャッシュの状態を表現するクラスを作成する。
 このクラスはStateクラスを継承し、作成した時相論理に関する述語を利用可能な形式とする。
 また、この形式を用いるために、「一致要素」と「変化要素」を定義する必要がある。
-まず、同一のキャッシュの状態遷移を表現するため、一致要素はキャッシュをとする。
+まず、一致要素について考える。
+キャッシュの状態遷移は同一のキャッシュの状態間で発生するため、一致要素はキャッシュとする。
+これに従い、23行目のように一致要素を表すEqItemクラスを継承したCacheEqItemクラスを定義し、要素としてCacheクラスを定義する。
+一方で、キャッシュ内の格納レスポンスの変化を表現するために、変化要素は格納レスポンスとする。
+したがって、24行目のように変化要素を表すDifItemクラスを継承したCacheDifItemクラスを定義し、要素としてレスポンスの集合を定義する。
+これにより、CacheStateクラスはあるキャッシュのある時点での格納レスポンスを表すクラスとして作成される。
+
+\begin{lstlisting}[caption=キャッシュの状態を表すクラス, label=code:CacheStateClass]
+sig CacheState extends State{}{
+	eq in CacheEqItem
+	dif in CacheDifItem
+
+	eq.cache in PrivateCache implies
+        all res:HTTPResponse | res in dif.store implies
+                {
+                    (one op:Maxage | op in res.headers.options) or
+                    (one d:DateHeader, e:ExpiresHeader | d in res.headers and e in res.headers)
+                }
+
+    eq.cache in PublicCache implies
+        all res:HTTPResponse | res in dif.store implies
+                {
+                    (one op:Maxage | op in res.headers.options) or
+                    (one op:SMaxage | op in res.headers.options) or
+                    (one d:DateHeader, e:ExpiresHeader | d in res.headers and e in res.headers)
+                }
+
+    all res:HTTPResponse | res in dif.store implies
+        one h:AgeHeader | h in res.headers
+}
+sig CacheEqItem extends EqItem{cache: one Cache}
+sig CacheDifItem extends DifItem{store: set HTTPResponse}
+\end{lstlisting}
+
+また、Code\ref{code:CacheStateClass}の5-22行目には、CacheStateクラスに以下の条件が記される。
+これは、HTTP/1.1の仕様に従ったキャッシュの動作を表現したものである。
+\begin{itemize}
+\item 個人キャッシュの格納レスポンスのヘッダには、cache-controlヘッダのmax-ageオプション、もしくはdateヘッダとexpireヘッダが一つ含まれる
+\item 共有キャッシュの格納レスポンスのヘッダには、cache-controlヘッダのmax-ageオプション、s-maxageオプション、dateヘッダとexpireヘッダのいずれかが一つ含まれる
+\item キャッシュの格納レスポンスには、必ずageヘッダが一つ含まれる
+\end{itemize}
+
+さらに、これらに加えてCode\ref{code:LimitedCacheStateClass}に記す条件を付与する。
+これらは、モデルをAlloy上で実装する際に必要となる項目である。
+\begin{lstlisting}[caption=CacheStateクラスの制限, label=code:LimitedCacheStateClass]
+fact noMultipleItems{
+	no disj i,i':CacheEqItem | i.cache = i'.cache
+	no disj i,i':CacheDifItem | i.store = i'.store
+}
+
+fact CacheInTransaction{
+	all tr:HTTPTransaction |
+		(some tr.request.(from + to).cache implies tr in StateTransaction)
+
+	all str:StateTransaction |{
+		str.beforeState.eq.cache = str.request.(from + to).cache
+		some str.(request + re_res) implies str.afterState.eq.cache = str.beforeState.eq.cache
+	}
+}
+\end{lstlisting}
+まず、1-4行目では同一内容の状態クラスのインスタンスが複数存在しないことを表している。
+もし、同一内容のインスタンスが複数存在することを許した場合、単純なインスタンスの比較によってのみでは状態が変化したかどうかを判定できない。
+この判定を容易にするため、この制限を設けている。
 
 \section{中継者の実装}
 \section{提案モデルの制限事項}
