@@ -44,7 +44,9 @@ HTTP/1.1において、中継者は「プロキシ」、「ゲートウェイ」
 \caption{提案モデルで新たに包括するヘッダ}
 \label{tb:ProposedModel-Headers}
 \begin{tabular}{lll}
-ヘッダ名 & 用途 & 関連するキャッシュの動作 \\ \hline
+\hline
+ヘッダ名 & 用途 & 関連するキャッシュの動作 \\
+\hline
 if-modified-since & 条件付きリクエストに使用 & 検証 \\
 if-none-match & 条件付きリクエストに使用 & 検証 \\
 etag & レスポンス内のコンテンツの固有値 & 検証 \\
@@ -53,6 +55,7 @@ age & レスポンスの経過時間 & 格納・再利用 \\
 cache-control & キャッシュの動作全般を制御 & 格納・再利用・検証 \\
 date & レスポンスの生成時刻 & 格納・再利用 \\
 expire & レスポンスの有効期限 & 格納・再利用 \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -64,7 +67,9 @@ expire & レスポンスの有効期限 & 格納・再利用 \\
 \caption{利用可能なcache-controlヘッダのオプション}
 \label{tb:CacheControlOption}
 \begin{tabular}{ll}
-オプション名 & 用途 \\ \hline
+\hline
+オプション名 & 用途 \\
+\hline
 max-age & レスポンスの有効期限を設定 \\
 smax-age & 共有キャッシュでの有効期限を設定（その他の設定より優先） \\
 no-cache & 検証無しに再利用できない \\
@@ -77,6 +82,7 @@ must-revalidate & 有効期限切れである場合、検証無しに再利用�
 proxy-revalidate & must-revalidateと同じ（個人キャッシュ以外で有効） \\
 public & 共有キャッシュに格納してよい \\
 private & 個人キャッシュに格納してよい \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -115,19 +121,18 @@ Gadget Attackerは中継者とキャッシュに関する能力は上記のNetwo
 \subsection{キャッシュクラスの作成}
 キャッシュを表すクラスをCode\ref{code:CacheClass}のように記述する。
 抽象クラスとしてCacheクラスを定義し、個人キャッシュを表すPrivateCacheクラス、共有キャッシュを表すPublicCacheクラスを定義する。
-
-\begin{lstlisting}[caption=Cacheクラス, label=code:CacheClass]
-abstract sig Cache{}
-sig PrivateCache extends Cache{}
-sig PublicCache extends Cache{}
-\end{lstlisting}
-
 また、CacheクラスにはCode\ref{code:LimitedCacheClass}に記述する制限を付与する。
 付与される制限は以下の二点である。
 \begin{itemize}
 \item どのネットワーク上の端末にも属さないキャッシュは存在しない（1-4行目）
 \item 個人キャッシュはクライアントに属し、共有キャッシュはサーバ、もしくは中継者に属する（6-9行目）
 \end{itemize}
+
+\begin{lstlisting}[caption=Cacheクラス, label=code:CacheClass]
+abstract sig Cache{}
+sig PrivateCache extends Cache{}
+sig PublicCache extends Cache{}
+\end{lstlisting}
 
 \begin{lstlisting}[caption=Cacheクラスの制限, label=code:LimitedCacheClass]
 fact noOrphanedCaches {
@@ -149,6 +154,7 @@ abstract sig HTTPConformist extends NetworkEndpoint{cache : lone Cache}
 \end{lstlisting}
 
 \subsection{キャッシュの状態を表すクラス}
+\label{sec:CacheClass}
 Code\ref{code:CacheStateClass}のように、時間軸上の各時点におけるキャッシュの状態を表現するクラスを作成する。
 このクラスはStateクラスを継承し、作成した時相論理に関する述語を利用可能な形式とする。
 また、この形式を用いるために、「一致要素」と「変化要素」を定義する必要がある。
@@ -158,6 +164,14 @@ Code\ref{code:CacheStateClass}のように、時間軸上の各時点におけ�
 一方で、キャッシュ内の格納レスポンスの変化を表現するために、変化要素は格納レスポンスとする。
 したがって、24行目のように変化要素を表すDifItemクラスを継承したCacheDifItemクラスを定義し、要素としてレスポンスの集合を定義する。
 これにより、CacheStateクラスはあるキャッシュのある時点での格納レスポンスを表すクラスとして作成される。
+
+また、Code\ref{code:CacheStateClass}の5-22行目には、CacheStateクラスに以下の条件が記される。
+これは、HTTP/1.1の仕様に従ったキャッシュの動作を表現したものである。
+\begin{itemize}
+\item 個人キャッシュの格納レスポンスのヘッダには、cache-controlヘッダのmax-ageオプション、もしくはdateヘッダとexpireヘッダが一つ含まれる
+\item 共有キャッシュの格納レスポンスのヘッダには、cache-controlヘッダのmax-ageオプション、s-maxageオプション、dateヘッダとexpireヘッダのいずれかが一つ含まれる
+\item キャッシュの格納レスポンスには、必ずageヘッダが一つ含まれる
+\end{itemize}
 
 \begin{lstlisting}[caption=キャッシュの状態を表すクラス, label=code:CacheStateClass]
 sig CacheState extends State{}{
@@ -186,18 +200,15 @@ sig CacheEqItem extends EqItem{cache: one Cache}
 sig CacheDifItem extends DifItem{store: set HTTPResponse}
 \end{lstlisting}
 
-また、Code\ref{code:CacheStateClass}の5-22行目には、CacheStateクラスに以下の条件が記される。
-これは、HTTP/1.1の仕様に従ったキャッシュの動作を表現したものである。
-\begin{itemize}
-\item 個人キャッシュの格納レスポンスのヘッダには、cache-controlヘッダのmax-ageオプション、もしくはdateヘッダとexpireヘッダが一つ含まれる
-\item 共有キャッシュの格納レスポンスのヘッダには、cache-controlヘッダのmax-ageオプション、s-maxageオプション、dateヘッダとexpireヘッダのいずれかが一つ含まれる
-\item キャッシュの格納レスポンスには、必ずageヘッダが一つ含まれる
-\end{itemize}
-
 \color{red}
 さらに、これらに加えてCacheState、StateTransactionクラスにはCode\ref{code:LimitedCacheStateClass}に記す条件を付与する。
-\color{black}
 これらは、モデルをAlloy上で実装する際に必要となる項目である。
+まず、1-4行目では同一内容の状態クラスのインスタンスが複数存在しないことを表している。
+もし、同一内容のインスタンスが複数存在することを許した場合、単純なインスタンスの比較によってのみでは状態が変化したかどうかを判定できない。
+この制限は状態変化の比較を容易にする。
+また、10-14行目では、キャッシュが搭載されている端末が通信を行った場合に、そのキャッシュの状態が必ず表現されることを表している。
+この記述により、通信が行われた場合にはそのリクエストとレスポンス時点での状態がCacheStateクラスのインスタンスとして必ず表現され、時間軸全体を通して変化を捉えることが可能になる。
+\color{black}
 \begin{lstlisting}[caption=CacheStateクラスの制限, label=code:LimitedCacheStateClass]
 fact noMultipleItems{
 	no disj i,i':CacheEqItem | i.cache = i'.cache
@@ -214,12 +225,115 @@ fact CacheInTransaction{
 	}
 }
 \end{lstlisting}
-まず、1-4行目では同一内容の状態クラスのインスタンスが複数存在しないことを表している。
-もし、同一内容のインスタンスが複数存在することを許した場合、単純なインスタンスの比較によってのみでは状態が変化したかどうかを判定できない。
-この制限は状態変化の比較を容易にする。
+
 \color{red}
-また、10-14行目では、キャッシュが搭載されている端末が通信を行った場合に、そのキャッシュの状態が必ずStateTransactionクラスで表現されることを表している。
-この記述により、通信が行われた場合にはそのリクエストとレスポンス時の状態が必ず表現され、全ての時間軸において変化を捉えることが可能になる。
+\subsection{キャッシュの動作}
+\ref{sec:CacheClass}節で定義したCacheStateクラスを用いて、キャッシュの動作を記述する。
+
+\subsubsection{レスポンスの格納と削除}
+レスポンスの格納と削除は図\ref{fig:ProposedModel-ResponseStoreDelete}のように、二状態間の状態変化として表現する。
+まず、レスポンスの格納はレスポンス時のキャッシュの状態において、格納レスポンスにそのレスポンスを追加することで表現できる。
+これは、図\ref{fig:ProposedModel-ResponseStoreDelete}内のCacheState0と1における状態変化にあたる。
+CacheState0は変化要素としてCacheDifItem0を持ち、CacheState1はCacheDifItem1を持つ。
+そして、CacheDifItem0は格納レスポンスの集合が空集合であり、CacheDifItem1は格納レスポンスの集合にResponse0を持つ。
+これは、StateTransaction0におけるレスポンスがResponse0であり、レスポンス時にそれがCache0に格納されたことを表す。
+また、レスポンスの削除は前状態における格納レスポンスの一部を次状態に引き継がないことで表現する。
+これは、図\ref{fig:ProposedModel-ResponseStoreDelete}内のCacheState1と2における状態変化にあたる。
+この場合、CacheState2は変化要素としてCacheDifItem0を持つため、上述の格納の場合と状態変化が逆になる。
+つまり、CacheState1の時点でCache0が格納していたResponse0を、CacheState2の時点では削除していることを表している。
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/ProposedModel-ResponseStoreDelete.eps}
+\caption{キャッシュの格納と削除の表現}
+\label{fig:ProposedModel-ResponseStoreDelete}
+\end{figure}
+
+また、以上の内容を提案モデルではCode\ref{code:StoreResponse}のように実装している。
+格納と削除は主に6-10行目で表されており、ある状態postがリクエスト時の状態である場合は、postの格納レスポンスの集合はpostの前状態であるpreの格納レスポンスの集合の部分集合となる。
+この二状態の関係を部分集合とすることで、前状態の格納レスポンスの一部がなくなることを容認し、削除の動作を表現できている。
+また、ある状態postがレスポンス時の状態である場合は、上述の削除に加え、格納が行われている可能性がある。
+したがって、postの格納レスポンスの集合をpreの格納レスポンスに、そのトランザクションでのレスポンスを加えた集合の部分集合とする。
+これにより、削除に加え、レスポンス時における格納を表現できている。
+ただしこの既述のみでは各時点でのキャッシュの状態はその前状態に依存することになり、初期状態が無条件となる。
+実際には、この場合の初期状態とはウェブ上における様々な通信が行われる前の状態を示すため、初期状態でキャッシュにレスポンスが格納されていることはない。
+したがって、初期状態の格納レスポンスの集合を空集合とする制限を、2-4行目で記述している。
+
+\begin{lstlisting}[caption=レスポンスの格納と削除の表現, label=code:StoreResponse]
+fact flowCacheState{
+	all cs:CacheState |
+		FirstState[cs] implies
+			no cs.dif.store
+
+	all pre, post:CacheState, str:StateTransaction |
+		JustBeforeState[pre, post, str] implies {
+			post in str.beforeState implies post.dif.store in pre.dif.store
+			post in str.afterState implies post.dif.store in (pre.dif.store + str.response)
+		}
+}
+\end{lstlisting}
+
+\subsubsection{レスポンスの再利用}
+レスポンスの再利用は、本来発生するレスポンスの代わりとなって発生する。
+したがって、既存モデルにおいてレスポンスを表すHTTPResponseクラスと同列に、CacheReuseクラスを定義する(Code\ref{code:CacheReuseClass}参照)。
+HTTPResponseクラスはHTTPプロトコル上のイベントを表すHTTPEventクラスを継承しているため、CacheReuseクラスもHTTPEventクラスを継承する。
+そして、CacheReuseクラスにある一つのレスポンスを関連付けることで、どのレスポンスを再利用したかを表現できる（5行目）。
+また、HTTPEventクラスにおいて、どの端末からどの端末に対するイベントであるかは定義されており、これを利用することで再利用したレスポンスの送信元と送信先を表現する。
+しかし、HTTPEventクラスでは送信元と送信先の他に、そのイベントに含まれるヘッダとボディが定義されている。
+実際のレスポンスの再利用では、送信されるのは再利用するレスポンスのヘッダとボディであり、それは上記のレスポンスとの関連付け（5行目）で表現されているためこの二項目は不必要である。
+したがって、7,8行目のように、CacheReuseクラスのヘッダとボディは空集合とする。
+
+\begin{lstlisting}[caption=CacheReuseクラス, label=code:CacheReuseClass]
+sig HTTPResponse extends HTTPEvent {
+	statusCode: one Status
+}
+sig CacheReuse extends NetworkEvent{
+	target: one HTTPResponse
+}{
+	no headers
+	no body
+}
+\end{lstlisting}
+
+上記で定義したCacheReuseクラスを用いて再利用を表現するため、Code\ref{code:happenCacheReuse}のように実際のキャッシュの動作に基づいた条件を付加する。
+付加した条件は以下の通りである。
+\begin{itemize}
+\item 再利用するレスポンスの送信先は、その再利用を発生させたリクエストの送信元である（5行目）
+\item 再利用するレスポンスの送信元は、その再利用を発生させたリクエストの送信元、もしくは、送信先である（6行目）
+\item 再利用を行うキャッシュの再利用直前の状態において、再利用するレスポンスが格納レスポンスに含まれている（8-13行目）
+\item 再利用するレスポンスと、その再利用を発生させたリクエストが表すURIが一致している
+\end{itemize}
+二点目において、再利用レスポンスの送信元がリクエストの送信元となる場合を認めるのは、そのリクエストを送信した端末のキャッシュによるレスポンスの再利用を想定するためである。
+例えば、図\ref{fig:BrowserCacheReuse}のようなブラウザキャッシュによるレスポンスの再利用である。
+図\ref{fig:BrowserCacheReuse}はブラウザがサーバにリクエストを送信する際に、ブラウザのキャッシュ内に既に格納されているレスポンスResponse0を再利用する流れを表している。
+
+\begin{lstlisting}[caption=CacheReuseの発生条件, label=code:happenCacheReuse]
+fact happenCacheReuse{
+	all reuse:CacheReuse | one str:StateTransaction |
+		{
+			str.re_res = reuse
+			reuse.to = str.request.from
+			reuse.from in str.request.(from + to)
+
+			some pre, post:CacheState |
+				(post in str.afterState and JustBeforeState[pre, post, str]) implies
+					{
+						reuse.target in pre.dif.store
+						reuse.from.cache = pre.eq.cache
+					}
+
+			reuse.target.uri = str.request.uri
+		}
+}
+\end{lstlisting}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/BrowserCacheReuse.eps}
+\caption{ブラウザキャッシュでのレスポンスの再利用の一例}
+\label{fig:BrowserCacheReuse}
+\end{figure}
+
 \color{black}
 
 \section{中継者の実装}
