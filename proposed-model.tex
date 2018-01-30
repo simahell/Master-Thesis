@@ -3,7 +3,6 @@
 \begin{document}
 \newpage
 
-\color{red}
 \chapter{提案モデル}
 この章では、\ref{sec:ProposedModel-TemporalLogic}章で述べた記述法の応用例として、キャッシュを実装したウェブセキュリティモデルを提案する。
 
@@ -195,7 +194,9 @@ sig CacheDifItem extends DifItem{store: set HTTPResponse}
 \item キャッシュの格納レスポンスには、必ずageヘッダが一つ含まれる
 \end{itemize}
 
-さらに、これらに加えてCode\ref{code:LimitedCacheStateClass}に記す条件を付与する。
+\color{red}
+さらに、これらに加えてCacheState、StateTransactionクラスにはCode\ref{code:LimitedCacheStateClass}に記す条件を付与する。
+\color{black}
 これらは、モデルをAlloy上で実装する際に必要となる項目である。
 \begin{lstlisting}[caption=CacheStateクラスの制限, label=code:LimitedCacheStateClass]
 fact noMultipleItems{
@@ -215,10 +216,14 @@ fact CacheInTransaction{
 \end{lstlisting}
 まず、1-4行目では同一内容の状態クラスのインスタンスが複数存在しないことを表している。
 もし、同一内容のインスタンスが複数存在することを許した場合、単純なインスタンスの比較によってのみでは状態が変化したかどうかを判定できない。
-この判定を容易にするため、この制限を設けている。
+この制限は状態変化の比較を容易にする。
+\color{red}
+また、10-14行目では、キャッシュが搭載されている端末が通信を行った場合に、そのキャッシュの状態が必ずStateTransactionクラスで表現されることを表している。
+この記述により、通信が行われた場合にはそのリクエストとレスポンス時の状態が必ず表現され、全ての時間軸において変化を捉えることが可能になる。
+\color{black}
 
 \section{中継者の実装}
 \section{提案モデルの制限事項}
-\color{black}
+
 
 \end{document}
