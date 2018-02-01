@@ -231,7 +231,19 @@ fact CacheInTransaction{
 \ref{sec:CacheClass}節で定義したCacheStateクラスを用いて、キャッシュの動作を記述する。
 
 \subsubsection{レスポンスの格納と削除}
-レスポンスの格納と削除は図\ref{fig:ProposedModel-ResponseStoreDelete}のように、二状態間の状態変化として表現する。
+提案モデルにおいて、キャッシュにおけるレスポンスの格納と削除は以下のように動作するものとする。
+
+\begin{itembox}[l]{レスポンスの格納}
+キャッシュは、そのキャッシュが存在する端末が送受信したレスポンスを格納できる。
+そのタイミングは、格納レスポンスを送受信したタイミングとする。
+また、格納レスポンスは格納することのできる条件をすべて満たしているものとする。
+\end{itembox}
+
+\begin{itembox}[l]{レスポンスの削除}
+キャッシュは任意のタイミングで、格納されているレスポンスをキャッシュ内から削除できる。
+\end{itembox}
+
+上記で定めたレスポンスの格納と削除は図\ref{fig:ProposedModel-ResponseStoreDelete}のように、二状態間の状態変化として表現する。
 まず、レスポンスの格納はレスポンス時のキャッシュの状態において、格納レスポンスにそのレスポンスを追加することで表現できる。
 これは、図\ref{fig:ProposedModel-ResponseStoreDelete}内のCacheState0と1における状態変化にあたる。
 CacheState0は変化要素としてCacheDifItem0を持ち、CacheState1はCacheDifItem1を持つ。
@@ -274,7 +286,14 @@ fact flowCacheState{
 \end{lstlisting}
 
 \subsubsection{レスポンスの再利用}
-レスポンスの再利用は、本来発生するレスポンスの代わりとなって発生する。
+提案モデルにおいて、キャッシュによるレスポンスの再利用は以下の動作を示す。
+
+\begin{itembox}[l]{レスポンスの再利用}
+キャッシュは、そのキャッシュが存在する端末が送受信するリクエストに対してキャッシュ内の格納レスポンスで応答できる場合、そのレスポンスを用いて応答することができる。
+ここで、リクエストの送信者が自身のキャッシュで再利用を行う場合、リクエストは実際はネットワーク上に発信されない。
+\end{itembox}
+
+上記で定めたレスポンスの再利用は、提案モデル内では本来発生するレスポンスの代わりとなって発生する。
 したがって、既存モデルにおいてレスポンスを表すHTTPResponseクラスと同列に、CacheReuseクラスを定義する(Code\ref{code:CacheReuseClass}参照)。
 HTTPResponseクラスはHTTPプロトコル上のイベントを表すHTTPEventクラスを継承しているため、CacheReuseクラスもHTTPEventクラスを継承する。
 そして、CacheReuseクラスにある一つのレスポンスを関連付けることで、どのレスポンスを再利用したかを表現できる（5行目）。
@@ -303,9 +322,6 @@ sig CacheReuse extends NetworkEvent{
 \item 再利用を行うキャッシュの再利用直前の状態において、再利用するレスポンスが格納レスポンスに含まれている（8-13行目）
 \item 再利用するレスポンスと、その再利用を発生させたリクエストが表すURIが一致している
 \end{itemize}
-二点目において、再利用レスポンスの送信元がリクエストの送信元となる場合を認めるのは、そのリクエストを送信した端末のキャッシュによるレスポンスの再利用を想定するためである。
-例えば、図\ref{fig:BrowserCacheReuse}のようなブラウザキャッシュによるレスポンスの再利用である。
-図\ref{fig:BrowserCacheReuse}はブラウザがサーバにリクエストを送信する際に、ブラウザのキャッシュ内に既に格納されているレスポンスResponse0を再利用する流れを表している。
 
 \begin{lstlisting}[caption=CacheReuseの発生条件, label=code:happenCacheReuse]
 fact happenCacheReuse{
@@ -327,17 +343,140 @@ fact happenCacheReuse{
 }
 \end{lstlisting}
 
+上記の条件の二点目において、再利用レスポンスの送信元がリクエストの送信元となる場合を認めるのは、そのリクエストを送信した端末のキャッシュによるレスポンスの再利用を想定するためである。
+例えば、図\ref{fig:BrowserCacheReuse}のようなブラウザキャッシュによるレスポンスの再利用である。
+図\ref{fig:BrowserCacheReuse}はブラウザがサーバにリクエストを送信する際に、ブラウザのキャッシュ内に既に格納されているレスポンスResponse0を再利用する流れを表している。
+このような場合には、CacheReuse0のfromとtoは同一のBrowser0を指すことになる。
+このような状況を想定し二点目の条件を設定している。
+
 \begin{figure}[htb]
 \centering
-\includegraphics[width=450pt]{./fig/BrowserCacheReuse.eps}
+\includegraphics[width=400pt]{./fig/BrowserCacheReuse.eps}
 \caption{ブラウザキャッシュでのレスポンスの再利用の一例}
 \label{fig:BrowserCacheReuse}
 \end{figure}
 
+\subsubsection{格納レスポンスの検証}
+提案モデルにおいて、キャッシュによる格納レスポンスの検証を以下のように定義する。
+
+\begin{itembox}[l]{格納レスポンスの検証}
+格納レスポンスは、格納レスポンスが再利用可能であるかを判定するために、条件付きリクエストを送信しオリジンサーバに問い合わせを行う。
+条件付きリクエストは、if-modified-sinceヘッダかif-none-matchヘッダのいずれかが含まれるリクエストのことを指す。
+これらのヘッダで送信される値を用いることで、オリジンサーバは格納レスポンスが最新のものと同一であるかを判定でき、再利用の可否をレスポンスで送信する。
+このレスポンスの状態コードは、検証が正常に終了した場合304か200となる。
+\begin{itemize}
+\item 再利用可能である場合 \\
+レスポンスの状態コードは304となり、そのヘッダやボディの値に関係なくキャッシュは格納レスポンスを再利用できる。
+\item 再利用不可である場合 \\
+レスポンスの状態コードは200となり、検証動作を発生させた元々のリクエストに対して検証動作の結果として返されるレスポンスを用いて返答する。
+またこの場合、格納されていたレスポンスは削除され、検証結果のレスポンスをキャッシュに格納し再利用を行う。
+\end{itemize}
+また、検証後はどちらの場合も再利用可能なレスポンスの一つを除いて、同一のURIに対するレスポンスはキャッシュ内には存在しない。
+\end{itembox}
+
+この動作の実装は以下の二つを表現することで実現できる。
+\begin{itemize}
+\item レスポンスの再利用が行われている場合に、その再利用レスポンスが検証済みであるかを判定する述語
+\item 条件付きリクエストに対するサーバの動作
+\end{itemize}
+
+まず、検証済みかを判定する述語checkVerificationをCode\ref{code:checkVerification}に示す。
+この述語checkVerificationはStateTransaction（strとする）を入力とする。
+述語checkVerificationは、strが再利用によって応答されているトランザクションであり、かつ、strのリクエストと再利用の間に条件付きリクエストを含むトランザクションが成立している場合に真となるように作成し、その論理は以下のように表せる。
+
+\begin{itembox}[l]{述語checkVerification}
+入力であるStateTransactionクラスのインスタンスであるstrが再利用を行っており、かつ、以下を満たすStateTranactionのクラスのインスタンスstr'が存在する場合に、本述語は真となる。
+\begin{itemize}
+\item strとstr'は異なるトランザクションである
+\item str'のレスポンスが存在する（通信が正常に完了している）
+\item str'のリクエストはstrの後に発生し、str'のレスポンスはstrの再利用より前に発生している
+\item str'のリクエストは、strの再利用が行われるキャッシュが属する端末から、再利用するレスポンスの送信元に送信されている
+\item strとstr'での要求URIが同一である
+\item 検証対象の格納レスポンスにetagヘッダかlast-modifiedヘッダが含まれている
+\item 検証対象の格納レスポンスにetagヘッダが含まれている場合、str'のリクエストにif-none-matchヘッダが含まれる
+\item 検証対象の格納レスポンスにlast-modifiedヘッダが含まれている場合、str'のリクエストにif-modified-sinceヘッダが含まれる
+\end{itemize}
+\end{itembox}
+
+\begin{lstlisting}[caption=ある再利用が検証済みか判定する述語, label=code:checkVerification]
+pred checkVerification[str:StateTransaction]{
+	one str.re_res
+
+	some str':StateTransaction |
+	{
+		str' != str
+		one str'.response
+
+		str'.request.current in str.request.current.*next
+		str.re_res.current in str'.response.current.*next
+
+		str'.request.from = str.re_res.from
+		str'.request.to = str.re_res.target.from
+		str'.request.uri = str.request.uri
+
+		some h:HTTPHeader |{
+			h in ETagHeader + LastModifiedHeader
+			h in str.re_res.target.headers
+		}
+
+		(some h:ETagHeader | h in str.re_res.headers) implies
+			(some h:IfNoneMatchHeader | h in str'.request.headers)
+		(some h:LastModifiedHeader | h in str.re_res.headers) implies
+			(some h:IfModifiedSinceHeader | h in str'.request.headers)
+	}
+}
+\end{lstlisting}
+
+また、条件付きリクエストに関するサーバの動作をCode\ref{code:ConditionalRequestTransaction}に示す。
+Code\ref{code:ConditionalRequestTransaction}内で、HTTPTransactionクラスのインスタンスtrが条件付きリクエストである場合、以下を満たす。
+\begin{itemize}
+\item 5-14行目 \\
+検証後に、その検証対象のレスポンスのURIを持つ格納レスポンスは一つとなる
+\item 16行目 \\
+trのレスポンスの状態コードは200か304である
+\item 18-23行目 \\
+trのレスポンスの状態コードが200である場合、trのレスポンスはキャッシュに格納される
+\item 25-30行目 \\
+trのレスポンスの状態コードが304である場合、trのレスポンスはキャッシュに格納されない
+\end{itemize}
+
+\begin{lstlisting}[caption=条件付きリクエストに対するサーバの動作, label=code:ConditionalRequestTransaction]
+fact ConditionalRequestTransaction{
+	all tr:HTTPTransaction |
+		(some h:HTTPHeader | h in IfNoneMatchHeader + IfModifiedSinceHeader and h in tr.request.headers) implies
+		{
+			one res:HTTPResponse |
+			{
+				res.uri = tr.response.uri
+				one cs:CacheState |
+				{
+					res in cs.dif.store
+					cs.eq.cache = tr.request.from.cache
+					cs in tr.afterState
+				}
+			}
+
+			tr.response.statusCode in c200 + c304
+
+			tr.response.statusCode = c200 implies
+			{
+				all cs:CacheState |
+					(cs in tr.afterState and cs.eq.cache = tr.response.to.cache) implies
+						tr.response in cs.dif.store
+			}
+
+			tr.response.statusCode = c304 implies
+			{
+				all cs:CacheState |
+					(cs in tr.afterState and cs.eq.cache = tr.response.to.cache) implies
+						tr.response !in cs.dif.store
+			}
+		}
+}
+\end{lstlisting}
 \color{black}
 
 \section{中継者の実装}
 \section{提案モデルの制限事項}
-
 
 \end{document}
