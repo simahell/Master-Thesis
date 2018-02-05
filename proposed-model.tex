@@ -155,6 +155,7 @@ abstract sig HTTPConformist extends NetworkEndpoint{cache : lone Cache}
 
 \subsection{キャッシュの状態を表すクラス}
 \label{sec:CacheClass}
+%edit:この部分をもっと詳しく
 Code\ref{code:CacheStateClass}のように、時間軸上の各時点におけるキャッシュの状態を表現するクラスを作成する。
 このクラスはStateクラスを継承し、作成した時相論理に関する述語を利用可能な形式とする。
 また、この形式を用いるために、「一致要素」と「変化要素」を定義する必要がある。
@@ -200,15 +201,13 @@ sig CacheEqItem extends EqItem{cache: one Cache}
 sig CacheDifItem extends DifItem{store: set HTTPResponse}
 \end{lstlisting}
 
-\color{red}
 さらに、これらに加えてCacheState、StateTransactionクラスにはCode\ref{code:LimitedCacheStateClass}に記す条件を付与する。
 これらは、モデルをAlloy上で実装する際に必要となる項目である。
 まず、1-4行目では同一内容の状態クラスのインスタンスが複数存在しないことを表している。
 もし、同一内容のインスタンスが複数存在することを許した場合、単純なインスタンスの比較によってのみでは状態が変化したかどうかを判定できない。
-この制限は状態変化の比較を容易にする。
+この制限により状態変化の比較が容易となる。
 また、10-14行目では、キャッシュが搭載されている端末が通信を行った場合に、そのキャッシュの状態が必ず表現されることを表している。
 この記述により、通信が行われた場合にはそのリクエストとレスポンス時点での状態がCacheStateクラスのインスタンスとして必ず表現され、時間軸全体を通して変化を捉えることが可能になる。
-\color{black}
 \begin{lstlisting}[caption=CacheStateクラスの制限, label=code:LimitedCacheStateClass]
 fact noMultipleItems{
 	no disj i,i':CacheEqItem | i.cache = i'.cache
@@ -226,7 +225,6 @@ fact CacheInTransaction{
 }
 \end{lstlisting}
 
-\color{red}
 \subsection{キャッシュの動作}
 \ref{sec:CacheClass}節で定義したCacheStateクラスを用いて、キャッシュの動作を記述する。
 
@@ -300,7 +298,10 @@ HTTPResponseクラスはHTTPプロトコル上のイベントを表すHTTPEvent�
 また、HTTPEventクラスにおいて、どの端末からどの端末に対するイベントであるかは定義されており、これを利用することで再利用したレスポンスの送信元と送信先を表現する。
 しかし、HTTPEventクラスでは送信元と送信先の他に、そのイベントに含まれるヘッダとボディが定義されている。
 実際のレスポンスの再利用では、送信されるのは再利用するレスポンスのヘッダとボディであり、それは上記のレスポンスとの関連付け（5行目）で表現されているためこの二項目は不必要である。
-したがって、7,8行目のように、CacheReuseクラスのヘッダとボディは空集合とする。
+\color{red}
+したがって、CacheReuseクラスとヘッダとボディの関係性は無視することができるが、ヘッダやボディを表すインスタンスは非常に多いため、無制限とした場合には無駄な計算時間を要することとなる。
+このような要因から、7,8行目のようにCacheReuseクラスのヘッダとボディは空集合とし、計算時間の短縮を図る。
+\color{black}
 
 \begin{lstlisting}[caption=CacheReuseクラス, label=code:CacheReuseClass]
 sig HTTPResponse extends HTTPEvent {
@@ -317,10 +318,10 @@ sig CacheReuse extends NetworkEvent{
 上記で定義したCacheReuseクラスを用いて再利用を表現するため、Code\ref{code:happenCacheReuse}のように実際のキャッシュの動作に基づいた条件を付加する。
 付加した条件は以下の通りである。
 \begin{itemize}
-\item 再利用するレスポンスの送信先は、その再利用を発生させたリクエストの送信元である（5行目）
-\item 再利用するレスポンスの送信元は、その再利用を発生させたリクエストの送信元、もしくは、送信先である（6行目）
+\item 再利用レスポンスの送信先は、その再利用を発生させたリクエストの送信元である（5行目）
+\item 再利用レスポンスの送信元は、その再利用を発生させたリクエストの送信元か送信先のいずれかである（6行目）
 \item 再利用を行うキャッシュの再利用直前の状態において、再利用するレスポンスが格納レスポンスに含まれている（8-13行目）
-\item 再利用するレスポンスと、その再利用を発生させたリクエストが表すURIが一致している
+\item 再利用するレスポンスと、その再利用を発生させたリクエストが表すURIが一致している（15行目）
 \end{itemize}
 
 \begin{lstlisting}[caption=CacheReuseの発生条件, label=code:happenCacheReuse]
@@ -387,14 +388,14 @@ fact happenCacheReuse{
 \begin{itembox}[l]{述語checkVerification}
 入力であるStateTransactionクラスのインスタンスであるstrが再利用を行っており、かつ、以下を満たすStateTranactionのクラスのインスタンスstr'が存在する場合に、本述語は真となる。
 \begin{itemize}
-\item strとstr'は異なるトランザクションである
-\item str'のレスポンスが存在する（通信が正常に完了している）
-\item str'のリクエストはstrの後に発生し、str'のレスポンスはstrの再利用より前に発生している
-\item str'のリクエストは、strの再利用が行われるキャッシュが属する端末から、再利用するレスポンスの送信元に送信されている
-\item strとstr'での要求URIが同一である
-\item 検証対象の格納レスポンスにetagヘッダかlast-modifiedヘッダが含まれている
-\item 検証対象の格納レスポンスにetagヘッダが含まれている場合、str'のリクエストにif-none-matchヘッダが含まれる
-\item 検証対象の格納レスポンスにlast-modifiedヘッダが含まれている場合、str'のリクエストにif-modified-sinceヘッダが含まれる
+\item strとstr'は異なるトランザクションである（6行目）
+\item str'のレスポンスが存在する。つまり、通信が正常に完了している（7行目）
+\item str'のリクエストはstrの後に発生し、str'のレスポンスはstrの再利用より前に発生している（9,10行目）
+\item str'のリクエストは、strの再利用が行われるキャッシュが属する端末から、再利用するレスポンスの送信元に送信されている（12,13行目）
+\item strとstr'での要求URIが同一である（14行目）
+\item 検証対象の格納レスポンスにetagヘッダかlast-modifiedヘッダが含まれている（16-19行目）
+\item 検証対象の格納レスポンスにetagヘッダが含まれている場合、str'のリクエストにif-none-matchヘッダが含まれる（21,22行目）
+\item 検証対象の格納レスポンスにlast-modifiedヘッダが含まれている場合、str'のリクエストにif-modified-sinceヘッダが含まれる（23,24行目）
 \end{itemize}
 \end{itembox}
 
@@ -470,10 +471,8 @@ fact ConditionalRequestTransaction{
 		}
 }
 \end{lstlisting}
-\color{black}
 
 \section{中継者の実装}
-\color{red}
 提案モデルにおいて中継者はHTTP/HTTPSプロトコルで動作し、プロキシとゲートウェイを包括する。
 したがって、HTTPに遵守する端末を表すHTTPConfirmistを継承する形で中継者のクラスを宣言する。
 また、中継者のクラスを継承し、プロキシとゲートウェイのクラスを宣言する。
@@ -526,8 +525,6 @@ fact MoveOfIntermediary{
 	}
 }
 \end{lstlisting}
-
-\color{black}
 
 \section{提案モデルの制限事項}
 
