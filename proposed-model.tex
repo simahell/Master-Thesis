@@ -352,7 +352,7 @@ fact happenCacheReuse{
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=400pt]{./fig/BrowserCacheReuse.eps}
+\includegraphics[width=350pt]{./fig/BrowserCacheReuse.eps}
 \caption{ブラウザキャッシュでのレスポンスの再利用の一例}
 \label{fig:BrowserCacheReuse}
 \end{figure}
@@ -499,10 +499,11 @@ sig HTTPGateway extends HTTPIntermediary{}
 中継者の動作はリクエストの送信先がHTTPIntermediaryクラスであり、かつ、レスポンスが存在するHTTPTransactionクラスに対する条件として記述する。
 このようなHTTPTransactionクラスのインスタンスtrに対して、以下を満たすHTTPTransactionクラスのインスタンスtr'が少なくとも一つ存在する。
 \begin{itemize}
-\item tr'のリクエストはtrのリクエストの後に発生し、tr'のレスポンスはtrのレスポンスの前に発生する（5,6行目）
-\item tr'のリクエストの送信先は、trのリクエストの送信先である中継者である（9行目）
-\item trとtr'のリクエストのURIは同一である（10行目）
-\item trとtr'のレスポンスのbodyと状態コードは同一である（11,12行目）
+\item trとtr'は異なるトランザクションである（5行目）
+\item tr'のリクエストはtrのリクエストの後に発生し、tr'のレスポンスはtrのレスポンスの前に発生する（7,8行目）
+\item tr'のリクエストの送信元は、trのリクエストの送信先である中継者である（9行目）
+\item trとtr'のリクエストのURIは同一である（12行目）
+\item trとtr'のレスポンスのbodyと状態コードは同一である（13,14行目）
 \end{itemize}
 ただし、上記の動作は正当なユーザに管理された中継者の動作であり、攻撃者が管理する中継者のふるまいはこの限りではない。
 
@@ -511,6 +512,8 @@ fact MoveOfIntermediary{
 	all tr:HTTPTransaction |{
 		tr.request.to in HTTPIntermediary and one tr.response implies{
 			some tr':HTTPTransaction |{
+				tr != tr'				
+				
 				tr'.request.current in tr.request.current.*next
 				tr.response.current in tr'.response.current.*next
 
