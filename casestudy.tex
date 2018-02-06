@@ -4,10 +4,79 @@
 \newpage
 
 \chapter{事例研究}
+本章では、複数の具体的な事例を取り上げ、提案モデルの実装の正しさを確認する。
+
 \section{キャッシュの基本動作}
+本節では、提案モデルでのキャッシュの実装の正しさを確認する。
+提案モデルにおいて、キャッシュは主に格納、再利用、検証の三つの動作を行う。
+それぞれについて、実行ツールAlloy Analyzerの実行結果を確認する。
+
+\subsection{レスポンスの格納}
+レスポンスの格納動作を確認するため、実行結果からレスポンスの格納を伴う動作を抽出する。
+ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの格納を対象とし、Code\ref{code:test_store}を用いて実行結果を出力を得る。
+
+\begin{lstlisting}[caption=レスポンスの格納, label=code:test_store]
+run test_store{
+	#HTTPClient = 1
+	#HTTPServer = 1
+	#HTTPRequest = 1
+	#HTTPResponse = 1
+	some CacheState.dif.store
+} for 2
+\end{lstlisting}
+
+得られる出力結果を整理し、図\ref{fig:TestStore}に示す。
+図\ref{fig:TestStore}には、PrivateCache0を持つBrowser0とServer0間の、Request0とResponse0のトランザクションにおけるキャッシュの状態変化が示されている。
+最初、リクエスト時にはキャッシュの状態はCacheState0で示されており、CacheState0の変化要素を表すCacheDifItem0のstoreが空集合である。
+しかし、レスポンス時には状態はCacheState1に変化しており、対応するCacheDifItem1がResponse0にstoreを指している。
+以上より、図\ref{fig:TestStore}はあるトランザクションにおいて、レスポンスがブラウザキャッシュに格納されている状態を表しており、レスポンスの格納が表現可能であることが確認できる。
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/TestStore.eps}
+\caption{レスポンスを格納する状態の一例}
+\label{fig:TestStore}
+\end{figure}
+
+\subsection{レスポンスの再利用}
+レスポンスの再利用動作を確認するため、実行結果からレスポンスの再利用を伴う動作を抽出する。
+ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの再利用を対象とし、Code\ref{code:test_reuse}を用いて実行結果を出力を得る。
+
+\begin{lstlisting}[caption=レスポンスの再利用, label=code:test_reuse]
+run test_reuse{
+	#HTTPClient = 1
+	#HTTPServer = 1
+	#Cache = 1
+
+	#HTTPRequest = 2
+	#HTTPResponse = 1
+	#CacheReuse = 1
+} for 4
+\end{lstlisting}
+
+得られる出力結果をスペースの都合上一部簡略化し、図\ref{fig:TestReuse}に示す。
+図\ref{fig:TestReuse}はあるキャッシュを持つブラウザとサーバ間で、同様のURIに対してリクエストが二回送信された状態を表している。
+ここで、StateTransaction0は図\ref{fig:TestStore}と同様、ブラウザキャッシュにResponse0を格納していることを示している。
+StateTransaction1では、この格納レスポンスを再利用するイベントCacheReuse0が発生している。
+以上より、図\ref{fig:TestReuse}に示す出力結果から、再利用を伴う動作が表現可能であることが確認できる。
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/TestReuse.eps}
+\caption{格納レスポンスを再利用する状態の一例}
+\label{fig:TestReuse}
+\end{figure}
+
+\subsection{レスポンスの検証}
 
 \section{中継者の基本動作}
 
-\section{BCP攻撃}
+\section{Browser Cache Poisoning Same-origin Attack}
+
+\section{Browser Cache Poisoning Cross-origin Attack}
+
+\section{Web Cache Deception Attack}
+
+\section{Cross-site Request Forgeries Attack}
 
 \end{document}
