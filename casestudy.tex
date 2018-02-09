@@ -13,7 +13,8 @@
 
 \subsection{レスポンスの格納}
 レスポンスの格納動作を確認するため、実行結果からレスポンスの格納を伴う動作を抽出する。
-ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの格納を対象とし、Code\ref{code:test_store}を用いて実行結果を出力を得る。
+ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの格納を対象とし、Code\ref{code:test_store}を用いて出力を得る。
+Code\ref{code:test_store}はクライアントとサーバの二者間における一組のリクエストとレスポンスの通信において、格納レスポンス集合に要素が存在するキャッシュの状態が存在する結果を出力するものである。
 
 \begin{lstlisting}[caption=レスポンスの格納, label=code:test_store]
 run test_store{
@@ -38,11 +39,12 @@ run test_store{
 \label{fig:TestStore}
 \end{figure}
 
-\subsection{レスポンスの再利用}
+\subsection{格納レスポンスの再利用}
 レスポンスの再利用動作を確認するため、実行結果からレスポンスの再利用を伴う動作を抽出する。
-ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの再利用を対象とし、Code\ref{code:test_reuse}を用いて実行結果を出力を得る。
+ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの再利用を対象とし、Code\ref{code:test_reuse}を用いて出力を得る。
+Code\ref{code:test_reuse}はクライアントとサーバの二者間における二組の通信において、一度レスポンスの再利用が発生している結果を出力するものである。
 
-\begin{lstlisting}[caption=レスポンスの再利用, label=code:test_reuse]
+\begin{lstlisting}[caption=格納レスポンスの再利用, label=code:test_reuse]
 run test_reuse{
 	#HTTPClient = 1
 	#HTTPServer = 1
@@ -56,7 +58,7 @@ run test_reuse{
 
 得られる出力結果をスペースの都合上一部簡略化し、図\ref{fig:TestReuse}に示す。
 図\ref{fig:TestReuse}はあるキャッシュを持つブラウザとサーバ間で、同様のURIに対してリクエストが二回送信された状態を表している。
-ここで、StateTransaction0は図\ref{fig:TestStore}と同様、ブラウザキャッシュにResponse0を格納していることを示している。
+ここで、StateTransaction0では図\ref{fig:TestStore}と同様、ブラウザキャッシュにResponse0を格納している。
 StateTransaction1では、この格納レスポンスを再利用するイベントCacheReuse0が発生している。
 以上より、図\ref{fig:TestReuse}に示す出力結果から、再利用を伴う動作が表現可能であることが確認できる。
 
@@ -67,16 +69,57 @@ StateTransaction1では、この格納レスポンスを再利用するイベン
 \label{fig:TestReuse}
 \end{figure}
 
-\subsection{レスポンスの検証}
+\subsection{格納レスポンスの検証}
+レスポンスの検証動作を確認するため、実行結果からレスポンスの検証を伴う動作を抽出する。
+ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの検証を対象とし、Code\ref{code:test_verification}を用いて出力を得る。
+Code\ref{code:test_verification}はクライアントとサーバの二者間における三組の通信のうち、検証が行われた通信が存在する結果を出力する。
+ここで検証が行われたかの判定は、\ref{sec:CacheVerification}節で述べたCode\ref{code:checkVerification}を利用している。
+
+\begin{lstlisting}[caption=格納レスポンスの検証, label=code:test_verification]
+run test_verification{
+	#HTTPClient = 1
+	#HTTPServer = 1
+	#HTTPIntermediary = 0
+	#Cache = 1
+	#PrivateCache = 1
+
+	some str:StateTransaction | checkVerification[str]
+} for 6
+\end{lstlisting}
+
+得られる出力結果をスペースの都合上一部簡略化し、図\ref{fig:TestVerification}に示す。
+図\ref{fig:TestVerification}はあるキャッシュを持つブラウザとサーバ間での、三つの通信（StateTransaction0,1,2）が存在している状態を表しており、このうちStateTransaction2が検証を行っている通信である。
+まず、StateTransaction0では図\ref{fig:TestStore}と同様、ブラウザキャッシュにResponse0を格納している。
+次に、Request2に対してブラウザキャッシュ内に格納されているResponse0を再利用するため、StateTransaction2で検証動作を行っている。
+ここで、格納レスポンスのResponse0にはEtagHeaderが含まれているため、検証に用いる条件付きリクエストであるRequest1にはIfNoneMatchHeaderが含まれている。
+また、検証結果となるResponse1は再利用可能であることを示す304の状態コードとなっているため、Response0はそのまま再利用可能であることが示されている。
+以上を踏まえて、StateTransaction1ではResponse0をそのまま再利用している。
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/TestVerification.eps}
+\caption{格納レスポンスの検証が含まれる状態の一例}
+\label{fig:TestVerification}
+\end{figure}
 
 \section{中継者の基本動作}
 
-\section{Browser Cache Poisoning Same-origin Attack}
+\section{Same-origin Browser Cache Poisoning Attack}
+提案モデルでSame-origin Browser Cache Poisoning Attack\cite{bcpattack}が表現可能であるかを確認する。
 
-\section{Browser Cache Poisoning Cross-origin Attack}
+\subsection{攻撃シナリオ}
+
+
+\section{Cross-origin Browser Cache Poisoning Attack}
+\subsection{攻撃シナリオ}
+
 
 \section{Web Cache Deception Attack}
+\subsection{攻撃シナリオ}
+
 
 \section{Cross-site Request Forgeries Attack}
+\subsection{攻撃シナリオ}
+
 
 \end{document}
