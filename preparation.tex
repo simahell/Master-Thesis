@@ -109,6 +109,7 @@ World Wide Web（以下、「ウェブ」とする）はインターネットに
 この条件付きリクエストに対するレスポンスとして、再利用可能であることを表すレスポンス、もしくは、再度キャッシュに格納するための最新のレスポンスを受け取ることができる。
 \end{enumerate}
 
+\begin{comment}
 \subsection{キャッシュを利用する攻撃}
 \label{sec:bcpattack}
 キャッシュを利用した攻撃の一例としてBrowser Cache Poisoning攻撃（以下、「BCP攻撃」とする）\cite{bcpattack}を取り上げる。
@@ -124,6 +125,8 @@ BCP攻撃はクライアントとサーバの経路上に攻撃者である第�
 BCP攻撃の特徴は、まず攻撃者が実際に行動するのはレスポンスの書き換えを行う一度きりであるのに対し、その影響は以降の通信全てに影響することである。
 また、攻撃が可能な対象が通信プロトコルの一つのHTTP（\ref{sec:http}章参照）や、暗号通信プロトコルHTTPS（\ref{sec:https}節参照）である。
 これらは現在広くウェブで使用されておりBCP攻撃の危険性は高くなっている一方で、このBCP攻撃の対策法は固まっておらず速やかな解析が求められている。
+\end{comment}
+
 
 \section{Hypertext Transfer Protocol}
 \label{sec:http}

@@ -1,0 +1,86 @@
+\documentclass[12pt,a4paper]{jbook}
+
+\input{settings}
+
+\begin{document}
+\appendix
+\begin{lstlisting}[caption=Cross-origin Browser Cache Poisoning攻撃の表現, label=code:Cross_origin_BCP]
+run Cross_origin_BCP{
+	#HTTPRequest = 5
+	#HTTPResponse = 4
+	#CacheReuse = 1
+
+	#Browser = 1
+	#HTTPServer = 2
+	#HTTPProxy = 1
+	#Cache = 1
+
+	#Principal = 4
+	#Alice = 3
+
+	one Uri
+
+	all c:Cache | c in Browser.cache
+
+	all p:Principal |
+		one c:HTTPConformist |
+			c in p.(servers + httpClients)
+	all b:Browser | b in Alice.httpClients
+	all s:HTTPServer | s in Alice.servers
+
+	all tr:HTTPTransaction |{
+		tr.request.to in HTTPIntermediary implies{
+			one tr':HTTPTransaction |{
+				tr'.request.from in HTTPIntermediary
+				tr'.request.to in HTTPServer
+
+				tr'.request.current = tr.request.current.next
+				tr'.response.current = tr'.request.current.next
+				tr.response.current = tr'.response.current.next
+			}
+		}
+	}
+	
+	one disj tr1,tr3:HTTPTransaction |{
+		tr1.request.from in HTTPClient
+		tr1.request.to in HTTPIntermediary
+		tr3.request.from in HTTPClient
+		tr3.request.to in HTTPIntermediary
+
+		tr3.request.current in tr1.response.current.*next
+		tr3.cause = tr1
+	}
+
+	some tr2,tr4:HTTPTransaction |{
+		tr2.request.from in HTTPProxy
+		tr2.request.to in HTTPServer
+		tr4.request.from in HTTPProxy
+		tr4.request.to in HTTPServer
+		tr2.request.to != tr4.request.to
+	}
+
+	one tr5:HTTPTransaction |{
+		tr5.request.from in HTTPClient
+		tr5.request.to in HTTPServer
+		one tr5.re_res
+
+		all tr:HTTPTransaction | (one tr.response implies tr5.request.current in tr.response.current.*next)
+	}
+
+	all tr,tr':HTTPTransaction |{
+		{
+			tr.request.from in HTTPClient
+			tr.request.to in HTTPIntermediary
+			tr'.request.from in HTTPIntermediary
+			tr'.request.to in HTTPServer
+		}implies{
+			tr.response.body != tr'.response.body
+		}
+	}
+} for 10
+\end{lstlisting}
+
+
+\end{document}
+
+
