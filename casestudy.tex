@@ -104,6 +104,36 @@ run test_verification{
 \end{figure}
 
 \section{中継者の基本動作}
+中継者の動作を確認するため、実行結果から中継者の動作を伴う動作を含む結果を抽出する。
+ここでは簡単のため、最も単純なクライアント、中継者、サーバが各一つずつ存在する経路において、中継者を経由する通信を対象としCode\ref{code:test_reuse}を用いて出力を得る。
+
+\begin{lstlisting}[caption=中継者の動作, label=code:test_intermediary]
+run test_intermediary{
+	#HTTPRequest = 2
+	#HTTPResponse = 2
+
+	#HTTPClient = 1
+	#HTTPServer = 1
+	#HTTPIntermediary = 1
+
+	all i:HTTPIntermediary | i in Alice.servers
+
+	one req:HTTPRequest | req.to in HTTPIntermediary
+	one req:HTTPRequest | req.to in HTTPServer
+} for 4
+\end{lstlisting}
+
+得られる出力結果をスペースの都合上一部簡略化し、図\ref{fig:TestIntermediary}に示す。
+図\ref{fig:TestIntermediary}で、HTTPTransaction0はブラウザと中継者間の通信、HTTPTransaction1は中継者とサーバ間の通信を表す。
+中継者は自身に届けられたリクエストやレスポンスを回送する役割を持ち、このHTTPTransaction0,1が中継者による回送を表している。
+以上より、中継者の動作が表現可能であることが確認できる。
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=450pt]{./fig/TestIntermediary.eps}
+\caption{中継者の動作を含む状態の一例}
+\label{fig:TestIntermediary}
+\end{figure}
 
 \section{Same-origin Browser Cache Poisoning Attack}
 \label{sec:same-origin-bcp}
