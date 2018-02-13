@@ -8,7 +8,7 @@
 
 \section{概要}
 本研究は基礎モデルで包括されていないウェブの要素としてキャッシュに注目する。
-\ref{sec:bcpattack}節に述べた通りキャッシュを利用する攻撃が数多く存在しており、また、キャッシュは一般的なユーザにも利用される。
+\ref{sec:introduction}章に述べた通りキャッシュを利用する攻撃が数多く存在しており、また、キャッシュは一般的なユーザにも利用される。
 したがって、キャッシュに関連した脆弱性はウェブの利用者の多くに多大な影響を与えるため、ウェブの安全性を解析する上で不可欠な要素である。
 本研究では、キャッシュを包括するウェブセキュリティモデルを提案し、\ref{sec:ProposedModel-TemporalLogic}節で述べた記述法を用いて提案モデルを実装する。
 
@@ -158,12 +158,12 @@ abstract sig HTTPConformist extends NetworkEndpoint{cache : lone Cache}
 %edit:この部分をもっと詳しく
 Code\ref{code:CacheStateClass}のように、時間軸上の各時点におけるキャッシュの状態を表現するクラスを作成する。
 このクラスはStateクラスを継承し、作成した時相論理に関する述語を利用可能な形式とする。
-また、この形式を用いるために、「一致要素」と「変化要素」を定義する必要がある。
-まず、一致要素について考える。
-キャッシュの状態遷移は同一のキャッシュの状態間で発生するため、一致要素はキャッシュとする。
-これに従い、23行目のように一致要素を表すEqItemクラスを継承したCacheEqItemクラスを定義し、要素としてCacheクラスを定義する。
-一方で、キャッシュ内の格納レスポンスの変化を表現するために、変化要素は格納レスポンスとする。
-したがって、24行目のように変化要素を表すDifItemクラスを継承したCacheDifItemクラスを定義し、要素としてレスポンスの集合を定義する。
+また、この形式を用いるために、「不変項目」と「変化項目」を定義する必要がある。
+まず、不変項目について考える。
+キャッシュの状態遷移は同一のキャッシュの状態間で発生するため、不変項目はキャッシュとする。
+これに従い、23行目のように不変項目を表すEqItemクラスを継承したCacheEqItemクラスを定義し、要素としてCacheクラスを定義する。
+一方で、キャッシュ内の格納レスポンスの変化を表現するために、変化項目は格納レスポンスとする。
+したがって、24行目のように変化項目を表すDifItemクラスを継承したCacheDifItemクラスを定義し、要素としてレスポンスの集合を定義する。
 これにより、CacheStateクラスはあるキャッシュのある時点での格納レスポンスを表すクラスとして作成される。
 
 また、Code\ref{code:CacheStateClass}の5-22行目には、CacheStateクラスに以下の条件が記される。
@@ -244,12 +244,12 @@ fact CacheInTransaction{
 上記で定めたレスポンスの格納と削除は図\ref{fig:ProposedModel-ResponseStoreDelete}のように、二状態間の状態変化として表現する。
 まず、レスポンスの格納はレスポンス時のキャッシュの状態において、格納レスポンスにそのレスポンスを追加することで表現できる。
 これは、図\ref{fig:ProposedModel-ResponseStoreDelete}内のCacheState0と1における状態変化にあたる。
-CacheState0は変化要素としてCacheDifItem0を持ち、CacheState1はCacheDifItem1を持つ。
+CacheState0は変化項目としてCacheDifItem0を持ち、CacheState1はCacheDifItem1を持つ。
 そして、CacheDifItem0は格納レスポンスの集合が空集合であり、CacheDifItem1は格納レスポンスの集合にResponse0を持つ。
 これは、StateTransaction0におけるレスポンスがResponse0であり、レスポンス時にそれがCache0に格納されたことを表す。
 また、レスポンスの削除は前状態における格納レスポンスの一部を次状態に引き継がないことで表現する。
 これは、図\ref{fig:ProposedModel-ResponseStoreDelete}内のCacheState1と2における状態変化にあたる。
-この場合、CacheState2は変化要素としてCacheDifItem0を持つため、上述の格納の場合と状態変化が逆になる。
+この場合、CacheState2は変化項目としてCacheDifItem0を持つため、上述の格納の場合と状態変化が逆になる。
 つまり、CacheState1の時点でCache0が格納していたResponse0を、CacheState2の時点では削除していることを表している。
 
 \begin{figure}[htb]
@@ -298,10 +298,8 @@ HTTPResponseクラスはHTTPプロトコル上のイベントを表すHTTPEvent�
 また、HTTPEventクラスにおいて、どの端末からどの端末に対するイベントであるかは定義されており、これを利用することで再利用したレスポンスの送信元と送信先を表現する。
 しかし、HTTPEventクラスでは送信元と送信先の他に、そのイベントに含まれるヘッダとボディが定義されている。
 実際のレスポンスの再利用では、送信されるのは再利用するレスポンスのヘッダとボディであり、それは上記のレスポンスとの関連付け（5行目）で表現されているためこの二項目は不必要である。
-\color{red}
 したがって、CacheReuseクラスとヘッダとボディの関係性は無視することができるが、ヘッダやボディを表すインスタンスは非常に多いため、無制限とした場合には無駄な計算時間を要することとなる。
 このような要因から、7,8行目のようにCacheReuseクラスのヘッダとボディは空集合とし、計算時間の短縮を図る。
-\color{black}
 
 \begin{lstlisting}[caption=CacheReuseクラス, label=code:CacheReuseClass]
 sig HTTPResponse extends HTTPEvent {
@@ -358,6 +356,7 @@ fact happenCacheReuse{
 \end{figure}
 
 \subsubsection{格納レスポンスの検証}
+\label{sec:CacheVerification}
 提案モデルにおいて、キャッシュによる格納レスポンスの検証を以下のように定義する。
 
 \begin{itembox}[l]{格納レスポンスの検証}
@@ -529,6 +528,6 @@ fact MoveOfIntermediary{
 }
 \end{lstlisting}
 
-\section{提案モデルの制限事項}
+%\section{提案モデルの制限事項}
 
 \end{document}
