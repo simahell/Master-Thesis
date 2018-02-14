@@ -309,7 +309,7 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 対応するリクエストとレスポンス間でのCookieの状態変化を表現できる。
 この表現能力はLTLに属する。
 \end{itemize}
-これらの時相論理の能力では、状態変化はある同一のTransaction間でのみ表現することができ、異なるTransactionの上滝クラスにその内容を引き継ぐことはできない。
+これらの時相論理の能力では、状態変化はある同一のTransaction間でのみ表現することができ、異なるTransactionの状態クラスにその内容を引き継ぐことはできない。
 具体的には図\ref{fig:2transaction-a}のような状況が考えられる。
 図\ref{fig:2transaction-a}は、ある同一のブラウザからリクエストが二つ連続して送信され、送信したリクエストに対するレスポンスが順番に発生した状況を表している。
 Cookieモデルでの表現能力では、図\ref{fig:2transaction-a}内で示している通りCSState1からCSState3へ、CSState2からCSState4への保有するCookieの集合の変化を表現できる。
