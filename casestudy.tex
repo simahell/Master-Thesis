@@ -133,9 +133,9 @@ run test_intermediary{
 \label{fig:TestIntermediary}
 \end{figure}
 
-\section{Same-origin Browser Cache Poisoning Attack}
+\section{Same-originブラウザキャッシュ汚染攻撃}
 \label{sec:same-origin-bcp}
-本節では，提案モデルでSame-origin Browser Cache Poisoning Attack\cite{bcpattack}（以下，Same-origin BCP攻撃とする）が表現可能であるかを確認する．
+本節では，提案モデルでSame-originブラウザキャッシュ汚染攻撃\cite{bcpattack}（以下，Same-origin BCP攻撃とする）が表現可能であるかを確認する．
 
 Same-origin BCP攻撃は，攻撃者の持つ中継者が攻撃対象であるブラウザとサーバの経路上に入り込む「中間者攻撃」の一種である．
 本攻撃の目的は対象のブラウザ，攻撃者の任意の動作を実行させることを目的とする．
@@ -154,7 +154,7 @@ Same-origin BCP攻撃は，攻撃者の持つ中継者が攻撃対象である�
 \begin{figure}[htb]
 \centering
 \includegraphics[width=400pt]{./fig/SameBCP_flow.eps}
-\caption{Same-origin Browser Cache Poisoning Attackの攻撃フロー}
+\caption{Same-originブラウザキャッシュ汚染攻撃の攻撃フロー}
 \label{fig:SameBCP_flow}
 \end{figure}
 
@@ -201,10 +201,10 @@ run Same_origin_BCP{
 } for 6
 \end{lstlisting}
 
-\section{Cross-site Request Forgery Attack}
-本節では，提案モデルでCross-site Request Forgery Attack\cite{cookie-model}（以下，CSRF攻撃とする）が表現可能であるかを確認する．
+\section{クロスサイトリクエストフォージェリ}
+本節では，提案モデルでクロスサイトリクエストフォージェリ\cite{cookie-model}（以下，CSRFとする）が表現可能であるかを確認する．
 
-CSRF攻撃は攻撃対象となるサーバと攻撃者が保有するサーバ，そして一般的なブラウザの３者間で実現される攻撃である．
+CSRFは攻撃対象となるサーバと攻撃者が保有するサーバ，そして一般的なブラウザの３者間で実現される攻撃である．
 本攻撃の目標は，攻撃対象であるサーバに対して，攻撃者が許されていない動作を実行させることである．
 
 攻撃全体のフローを図\ref{fig:CSRF_flow}に示す．
@@ -214,17 +214,17 @@ CSRF攻撃は攻撃対象となるサーバと攻撃者が保有するサーバ�
 \begin{figure}[htb]
 \centering
 \includegraphics[width=400pt]{./fig/CSRF_flow.eps}
-\caption{Cross-site Request Forgery Attackの攻撃フロー}
+\caption{クロスサイトリクエストフォージェリの攻撃フロー}
 \label{fig:CSRF_flow}
 \end{figure}
 
-提案モデルによるCSRF攻撃の表現を確認するため，実行結果から図\ref{fig:CSRF_flow}のフローを含む結果を抽出する．
+提案モデルによるCSRFの表現を確認するため，実行結果から図\ref{fig:CSRF_flow}のフローを含む結果を抽出する．
 抽出にはCode\ref{code:CSRF}を用い，その実行結果として図\ref{fig:CSRF_flow}に示す攻撃フローを含む結果が出力された．
 スペースの都合上，これを一部簡略化し図\ref{fig:CSRF_alloy}に示す．
 図\ref{fig:CSRF_alloy}において，Server0が攻撃者のサーバ，Server1が攻撃対象のサーバを表している．
 また，HTTPTransaction0はBrowserがServer0にアクセスした通信を，HTTPTransaction1はそれに誘発されたBrowserとServer1の通信を表している．
 HTTPTransaction1はHTTPTransaction0にcauseの関係を持ち，これがHTTPTransaction0に誘発されていることを示している．
-以上のことから，CSRF攻撃を含む出力結果が得られているため，提案モデルがCSRF攻撃を表現できることを確認した．
+以上のことから，CSRFを含む出力結果が得られているため，提案モデルがCSRFを表現できることを確認した．
 
 \begin{lstlisting}[caption=CSRF攻撃の表現, label=code:CSRF]
 run CSRF{
@@ -259,12 +259,12 @@ run CSRF{
 \begin{figure}[htb]
 \centering
 \includegraphics[width=450pt]{./fig/CSRF_alloy.eps}
-\caption{CSRF攻撃のフローを含む状態の一例}
+\caption{CSRFのフローを含む状態の一例}
 \label{fig:CSRF_alloy}
 \end{figure}
 
-\section{Cross-origin Browser Cache Poisoning Attack}
-本節では，提案モデルでCross-origin Browser Cache Poisoning Attack\cite{bcpattack}（以下，Cross-origin BCP攻撃とする）が表現可能であるかを確認する．
+\section{Cross-originブラウザキャッシュ汚染攻撃}
+本節では，提案モデルでCross-originブラウザキャッシュ汚染攻撃\cite{bcpattack}（以下，Cross-origin BCP攻撃とする）が表現可能であるかを確認する．
 
 Cross-origin BCP攻撃は，\ref{sec:same-origin-bcp}節で述べたSame-origin BCP攻撃と同様に「中間者攻撃」の一種である．
 本攻撃法はSame-origin BCP攻撃に比べ，改ざんレスポンスの再利用の頻度を高めることができる．
@@ -284,7 +284,7 @@ Cross-origin BCP攻撃は図\ref{fig:CrossBCP_flow}に示す攻撃フローで�
 \begin{figure}[htb]
 \centering
 \includegraphics[width=450pt]{./fig/CrossBCP_flow.eps}
-\caption{Cross-origin Browser Cache Poisoning Attackの攻撃フロー}
+\caption{Cross-originブラウザキャッシュ汚染攻撃の攻撃フロー}
 \label{fig:CrossBCP_flow}
 \end{figure}
 
@@ -293,8 +293,8 @@ Cross-origin BCP攻撃は図\ref{fig:CrossBCP_flow}に示す攻撃フローで�
 このことから，提案モデルがCross-origin BCP攻撃を表現できることを確認した．
 また，スペースの都合上，実行コードは巻末付録Code\ref{code:Cross_origin_BCP}に記載する．
 
-\section{Web Cache Deception Attack}
-本節では，提案モデルでWeb Cache Deception Attack\cite{WCD}（以下，WCD攻撃とする）が表現可能であるかを確認する．
+\section{ウェブキャッシュ詐称攻撃}
+本節では，提案モデルでウェブキャッシュ詐称攻撃\cite{WCD}（以下，WCD攻撃とする）が表現可能であるかを確認する．
 
 WCD攻撃は攻撃対象となるサーバと中継者，２つのブラウザ間で成り立つ攻撃である．
 攻撃者はこれらのうち１つのブラウザを所有し，本来，攻撃者がサーバから得ることのできないファイルを取得することが目的である．
