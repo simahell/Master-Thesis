@@ -8,10 +8,10 @@
 この章では，イベント発生時におけるウェブの様々な要素の状態変化の表現に利用可能なAlloyでの時相論理の記述法を提案する．
 
 前述の\ref{sec:existing-models-problems}節における既存モデルの時相論理の表現能力の問題点は，「時間軸全体を通して状態変化を捉えることができない」ことである．
-そもそも，Cookieモデルにおいて，状態クラス（CookieモデルにけるCSStateクラス）間の関係性はTransactionクラスのみ用いて表現している．
+そもそも，クッキーモデルにおいて，状態クラス（クッキーモデルにけるCSStateクラス）間の関係性はTransactionクラスのみ用いて表現している．
 これが要因となり，同一のTransaction内での状態変化のみの表現能力となっている．
 したがって，状態クラス間の関係性をTransactionに因らない記述法で表現することが必要となる．
-また，CookieモデルにおけるCSStateクラスはCookieの状態を表現するためのクラスであり，CSStateのみに利用できる記法では，他のウェブの要素に応用できず汎用性の低い成果となる．
+また，クッキーモデルにおけるCSStateクラスはクッキーの状態を表現するためのクラスであり，CSStateのみに利用できる記法では，他のウェブの要素に応用できず汎用性の低い成果となる．
 以上より，本研究では様々なウェブの要素の状態を表現できる汎用的なクラスを定義し，それらのクラスに統一して利用できる述語を提案する．
 
 ここで，時間軸全体を通して状態変化を表現するためにどのような述語が必要となるかを考える．
@@ -87,17 +87,17 @@ sig StateTransaction extends HTTPTransaction{
 また，DifItemは状態遷移において変化する要素（以下，「変化項目」とする）を表すクラスである．
 あるウェブの要素の状態変化を表現する上で，変化する内容をDifItemとして記述する．
 
-最後に，これらのStateはCookieモデルと同様にHTTPTransactionに関連付けることで，レスポンスとリクエスト時の状態を表す．
+最後に，これらのStateはクッキーモデルと同様にHTTPTransactionに関連付けることで，レスポンスとリクエスト時の状態を表す．
 具体的に，HTTPTransactionを継承しStateクラスを持つStateTransactionをCode\ref{code:StateClass}の9-12行目で定義している．
 
 このStateクラスを利用してウェブの要素の状態遷移を考えるには，State，EqItem，DifItemクラスを継承するその要素専用のクラスを定義する．
 また，その要素について不変項目と変化項目を明らかにしておき，継承後のクラスに記述する．
-以下のCode\ref{code:CookieClass}はCookieモデルを基にしたCookieへの応用例である．
+以下のCode\ref{code:CookieClass}はクッキーモデルを基にしたクッキーへの応用例である．
 2,3行目に記すように，Stateを継承するクラスではeqとdifもまた，EqItem，DifItemを継承する専用のクラスに含まれるように条件を記述する．
-Cookieモデルでは，不変項目がクライアント，変化項目がCookieの集合となっている．
-これは，各クライアント毎にCookieの保存が行われているため，状態遷移の上でクライアントは変更されないためである．
-また，変化項目は状態遷移で変化しうる要素，つまり，クライアント内で保存されているCookieを表現する．
-\begin{lstlisting}[caption=Cookieへの応用例, label=code:CookieClass]
+クッキーモデルでは，不変項目がクライアント，変化項目がCookieの集合となっている．
+これは，各クライアント毎にクッキーの保存が行われているため，状態遷移の上でクライアントは変更されないためである．
+また，変化項目は状態遷移で変化しうる要素，つまり，クライアント内で保存されているクッキーを表現する．
+\begin{lstlisting}[caption=クッキーへの応用例, label=code:CookieClass]
 sig CookieState extends State{}{
 	eq in CookieEqItem
 	dif in CookieDifItem

@@ -46,7 +46,7 @@ Akhaweらによって提案されたウェブセキュリティモデル\cite{ba
 ブラウザ内には，HTTPSにおけるグリーンバーのような，セキュリティに関する内容を示唆するUIが存在し，これらのふるまいを基礎モデルでは包括する．
 
 最後に，メモリ領域について述べる．
-基礎モデルでは，この領域をCookieやパスワードの保存領域として取り扱う．
+基礎モデルでは，この領域をクッキーやパスワードの保存領域として取り扱う．
 この領域内の機密情報はある１つのオリジンとの関連を持ち，そのオリジンによるスクリプトによって読みだされる．
 ただし，モデルの単純化のため，このメモリ領域は「追加」のみ可能とし，格納した情報の削除といった動作は包括しない．
 \item サーバ \\
@@ -245,19 +245,19 @@ fact Traces{
 \label{fig:based-model-temporal-logic}
 \end{figure}
 
-\section{Cookieを包括するモデル}
+\section{クッキーを包括するモデル}
 \label{sec:cookie-model}
-Ryckらによって提案されたウェブセキュリティモデル\cite{cookie-model}（以下，「Cookieモデル」とする）は，Akhaweらの基礎モデル（\ref{sec:based-model}節参照）を基にCookieの要素を追加したものである．
+Ryckらによって提案されたウェブセキュリティモデル\cite{cookie-model}（以下，「クッキーモデル」とする）は，Akhaweらの基礎モデル（\ref{sec:based-model}節参照）を基にクッキーの要素を追加したものである．
 
-\subsection{Cookieモデルの能力}
-ウェブセキュリティモデルの３要素の１つである「対象のシステムの構造と動作」，及び，「安全性要件」におけるSecurity Invariantsに対してCookieを追加する．
+\subsection{クッキーモデルの能力}
+ウェブセキュリティモデルの３要素の１つである「対象のシステムの構造と動作」，及び，「安全性要件」におけるSecurity Invariantsに対してクッキーを追加する．
 これら以外の要素は基礎モデルに準拠する．
 
-\subsection{Cookieモデルにおける時相論理の実装}
+\subsection{クッキーモデルにおける時相論理の実装}
 基礎モデルでは，時相論理はリクエストやレスポンスといったイベントの発生順序を表現するために用いられている．
-Cookieモデルではこれに加えて，対応するリクエストとレスポンス間でのCookieの状態変化を表現するための時相論理を導入している．
-Cookieに対しての時相論理はCode\ref{code:cookie-model-temporal-logic}に示すコードで実装される．
-\begin{lstlisting}[caption=Cookieに対する時相論理, label=code:cookie-model-temporal-logic]
+クッキーモデルではこれに加えて，対応するリクエストとレスポンス間でのクッキーの状態変化を表現するための時相論理を導入している．
+クッキーに対しての時相論理はCode\ref{code:cookie-model-temporal-logic}に示すコードで実装される．
+\begin{lstlisting}[caption=クッキーに対する時相論理, label=code:cookie-model-temporal-logic]
 sig CSState {
 	dst: Origin,
 	cookies: set Cookie
@@ -273,11 +273,11 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 	beforeState.dst = req.host
 }
 \end{lstlisting}
-このCookieに関する表現は，基礎モデルにおけるCode\ref{code:based-model-httptransaction}を応用している．
-1-4行目で定義されているCSStateは，ある時点でのCookieの状態を表現できるクラスである．
+このクッキーに関する表現は，基礎モデルにおけるCode\ref{code:based-model-httptransaction}を応用している．
+1-4行目で定義されているCSStateは，ある時点でのクッキーの状態を表現できるクラスである．
 また，6-14行目で定義しているCSStateHTTPTransactionは基礎モデルのHTTPTransaction（\ref{sec:based-model-http}節参照）を継承しているクラスであり，既存のクラスに上記のCSStateを付加している．
-このCSStateHTTPTransactionにはCSStateを２つ関連付けており，これらはリクエストとレスポンスそれぞれの時点でのブラウザのCookieの状態を表す．
-このように記述することで，リクエストとレスポンスのやり取りにおいて起こりうるCookieの変化を11行目のように記述できる．
+このCSStateHTTPTransactionにはCSStateを２つ関連付けており，これらはリクエストとレスポンスそれぞれの時点でのブラウザのクッキーの状態を表す．
+このように記述することで，リクエストとレスポンスのやり取りにおいて起こりうるクッキーの変化を11行目のように記述できる．
 11行目の具体的な内容は以下のようになる．
 \begin{eqnarray*}
 & C_{res} = C_{req} + C_{h} &\\
@@ -293,7 +293,7 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 \begin{figure}[htb]
 \centering
 \includegraphics[width=350pt]{./fig/cookie-model-transaction.eps}
-\caption{CookieモデルにおけるCookieの時間変化の表現}
+\caption{クッキーモデルにおけるクッキーの時間変化の表現}
 \label{fig:cookie-model-transaction}
 \end{figure}
 
@@ -305,14 +305,14 @@ sig CSStateHTTPTransaction extends HTTPTransaction {
 \item 基礎モデル \\
 リクエストやレスポンスの発生順序を表現するための時間軸を表現できる．
 この表現能力はLTLに属する．
-\item Cookieモデル \\
-対応するリクエストとレスポンス間でのCookieの状態変化を表現できる．
+\item クッキーモデル \\
+対応するリクエストとレスポンス間でのクッキーの状態変化を表現できる．
 この表現能力はLTLに属する．
 \end{itemize}
 これらの時相論理の能力では，状態変化はある同一のTransaction間でのみ表現することができ，異なるTransactionの状態クラスにその内容を引き継ぐことはできない．
 具体的には図\ref{fig:2transaction-a}のような状況が考えられる．
 図\ref{fig:2transaction-a}は，ある同一のブラウザからリクエストが２つ連続して送信され，送信したリクエストに対するレスポンスが順番に発生した状況を表している．
-Cookieモデルでの表現能力では，図\ref{fig:2transaction-a}内で示している通りCSState1からCSState3へ，CSState2からCSState4への保有するCookieの集合の変化を表現できる．
+クッキーモデルでの表現能力では，図\ref{fig:2transaction-a}内で示している通りCSState1からCSState3へ，CSState2からCSState4への保有するCookieの集合の変化を表現できる．
 しかし，この表現能力ではCSState3で格納されたCookie1がCSState4で格納されていること（図\ref{fig:2transaction-b}のような状態）は起こりえない．
 なぜなら，CSState4はCSState3で生じた状態変化を捉えることができないためである．
 こういった表現できない状態が存在する場合，形式手法で得られた結果に潜在的な危険性が含まれる可能性がある．
@@ -322,14 +322,14 @@ Cookieモデルでの表現能力では，図\ref{fig:2transaction-a}内で示�
 \begin{figure}[htb]
 \centering
 \includegraphics[width=450pt]{./fig/2transaction-a.eps}
-\caption{Cookieモデルで表現可能な状態変化の一例}
+\caption{クッキーモデルで表現可能な状態変化の一例}
 \label{fig:2transaction-a}
 \end{figure}
 
 \begin{figure}[hbt]
 \centering
 \includegraphics[width=450pt]{./fig/2transaction-b.eps}
-\caption{Cookieモデルで表現不可能な状態変化の一例}
+\caption{クッキーモデルで表現不可能な状態変化の一例}
 \label{fig:2transaction-b}
 \end{figure}
 
