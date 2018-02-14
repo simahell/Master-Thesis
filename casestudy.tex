@@ -8,13 +8,13 @@
 
 \section{キャッシュの基本動作}
 本節では、提案モデルでのキャッシュの実装の正しさを確認する。
-提案モデルにおいて、キャッシュは主に格納、再利用、検証の三つの動作を行う。
+提案モデルにおいて、キャッシュは主に格納、再利用、検証の３つの動作を行う。
 それぞれについて、実行ツールAlloy Analyzerの実行結果を確認する。
 
 \subsection{レスポンスの格納}
 レスポンスの格納動作を確認するため、実行結果からレスポンスの格納を伴う動作を含む結果を抽出する。
-ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの格納を対象とし、Code\ref{code:test_store}を用いて出力を得る。
-Code\ref{code:test_store}はクライアントとサーバの二者間における一組のリクエストとレスポンスの通信において、格納レスポンス集合に要素が存在するキャッシュの状態が存在する結果を出力するものである。
+ここでは簡単のため、最も単純な２者間における通信で生じるレスポンスの格納を対象とし、Code\ref{code:test_store}を用いて出力を得る。
+Code\ref{code:test_store}はクライアントとサーバの２者間における１組のリクエストとレスポンスの通信において、格納レスポンス集合に要素が存在するキャッシュの状態が存在する結果を出力するものである。
 
 \begin{lstlisting}[caption=レスポンスの格納, label=code:test_store]
 run test_store{
@@ -41,8 +41,8 @@ run test_store{
 
 \subsection{格納レスポンスの再利用}
 レスポンスの再利用動作を確認するため、実行結果からレスポンスの再利用を伴う動作を含む結果を抽出する。
-ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの再利用を対象とし、Code\ref{code:test_reuse}を用いて出力を得る。
-Code\ref{code:test_reuse}はクライアントとサーバの二者間における二組の通信において、一度レスポンスの再利用が発生している結果を出力するものである。
+ここでは簡単のため、最も単純な２者間における通信で生じるレスポンスの再利用を対象とし、Code\ref{code:test_reuse}を用いて出力を得る。
+Code\ref{code:test_reuse}はクライアントとサーバの２者間における２組の通信において、一度レスポンスの再利用が発生している結果を出力するものである。
 
 \begin{lstlisting}[caption=格納レスポンスの再利用, label=code:test_reuse]
 run test_reuse{
@@ -57,7 +57,7 @@ run test_reuse{
 \end{lstlisting}
 
 得られる出力結果をスペースの都合上一部簡略化し、図\ref{fig:TestReuse}に示す。
-図\ref{fig:TestReuse}はあるキャッシュを持つブラウザとサーバ間で、同様のURIに対してリクエストが二回送信された状態を表している。
+図\ref{fig:TestReuse}はあるキャッシュを持つブラウザとサーバ間で、同様のURIに対してリクエストが２回送信された状態を表している。
 ここで、StateTransaction0では図\ref{fig:TestStore}と同様、ブラウザキャッシュにResponse0を格納している。
 StateTransaction1では、この格納レスポンスを再利用するイベントCacheReuse0が発生している。
 以上より、図\ref{fig:TestReuse}に示す出力結果から、再利用を伴う動作が表現可能であることが確認できる。
@@ -71,8 +71,8 @@ StateTransaction1では、この格納レスポンスを再利用するイベン
 
 \subsection{格納レスポンスの検証}
 レスポンスの検証動作を確認するため、実行結果からレスポンスの検証を伴う動作を含む結果を抽出する。
-ここでは簡単のため、最も単純な二者間における通信で生じるレスポンスの検証を対象とし、Code\ref{code:test_verification}を用いて出力を得る。
-Code\ref{code:test_verification}はクライアントとサーバの二者間における三組の通信のうち、検証が行われた通信が存在する結果を出力する。
+ここでは簡単のため、最も単純な２者間における通信で生じるレスポンスの検証を対象とし、Code\ref{code:test_verification}を用いて出力を得る。
+Code\ref{code:test_verification}はクライアントとサーバの２者間における３組の通信のうち、検証が行われた通信が存在する結果を出力する。
 ここで検証が行われたかの判定は、\ref{sec:CacheVerification}節で述べたCode\ref{code:checkVerification}を利用している。
 
 \begin{lstlisting}[caption=格納レスポンスの検証, label=code:test_verification]
@@ -88,7 +88,7 @@ run test_verification{
 \end{lstlisting}
 
 得られる出力結果をスペースの都合上一部簡略化し、図\ref{fig:TestVerification}に示す。
-図\ref{fig:TestVerification}はあるキャッシュを持つブラウザとサーバ間での、三つの通信（StateTransaction0,1,2）が存在している状態を表しており、このうちStateTransaction2が検証を行っている通信である。
+図\ref{fig:TestVerification}はあるキャッシュを持つブラウザとサーバ間での、３つの通信（StateTransaction0,1,2）が存在している状態を表しており、このうちStateTransaction2が検証を行っている通信である。
 まず、StateTransaction0では図\ref{fig:TestStore}と同様、ブラウザキャッシュにResponse0を格納している。
 次に、Request2に対してブラウザキャッシュ内に格納されているResponse0を再利用するため、StateTransaction2で検証動作を行っている。
 ここで、格納レスポンスのResponse0にはEtagHeaderが含まれているため、検証に用いる条件付きリクエストであるRequest1にはIfNoneMatchHeaderが含まれている。
@@ -104,7 +104,7 @@ run test_verification{
 
 \section{中継者の基本動作}
 中継者の動作を確認するため、実行結果から中継者の動作を伴う動作を含む結果を抽出する。
-ここでは簡単のため、最も単純なクライアント、中継者、サーバが各一つずつ存在する経路において、中継者を経由する通信を対象としCode\ref{code:test_reuse}を用いて出力を得る。
+ここでは簡単のため、最も単純なクライアント、中継者、サーバが各１つずつ存在する経路において、中継者を経由する通信を対象としCode\ref{code:test_reuse}を用いて出力を得る。
 
 \begin{lstlisting}[caption=中継者の動作, label=code:test_intermediary]
 run test_intermediary{
@@ -145,7 +145,7 @@ Same-origin BCP攻撃は、攻撃者の持つ中継者が攻撃対象である�
 
 攻撃全体のフローを図\ref{fig:SameBCP_flow}に示す。
 本攻撃による攻撃者のふるまいは、通信経路上において本来ブラウザが受け取るはずのレスポンスの内容に改ざん（図\ref{fig:SameBCP_flow}内の「4.改ざんレスポンス」）を行い、ブラウザが保有するキャッシュに改ざんレスポンスを格納させることである。
-この際の攻撃者による改ざん内容は以下の二点である。
+この際の攻撃者による改ざん内容は以下の２点である。
 \begin{itemize}
 \item レスポンスのヘッダをブラウザキャッシュによるレスポンスの格納や再利用を誘発するよう改ざんする。例えば、有効期限の延長や、検証動作なしの再利用の許可が挙げられる
 \item レスポンスのボディに攻撃者に実行させたい任意の動作を記述する
@@ -208,7 +208,7 @@ run Same_origin_BCP{
 本節では、提案モデルでCross-site Request Forgeries Attack\cite{cookie-model}（以下、CSRF攻撃とする）が表現可能であるかを確認する。
 
 \subsection{攻撃の概要とフロー}
-CSRF攻撃は攻撃対象となるサーバと攻撃者が保有するサーバ、そして一般的なブラウザの三者間で実現される攻撃である。
+CSRF攻撃は攻撃対象となるサーバと攻撃者が保有するサーバ、そして一般的なブラウザの３者間で実現される攻撃である。
 本攻撃の目標は、攻撃対象であるサーバに対して、攻撃者が許されていない動作を実行させることである。
 
 攻撃全体のフローを図\ref{fig:CSRF_flow}に示す。
@@ -275,7 +275,7 @@ run CSRF{
 Cross-origin BCP攻撃は、\ref{sec:same-origin-bcp}節で述べたSame-origin BCP攻撃と同様に「中間者攻撃」一種である。
 Same-origin BCP攻撃に比べ、改ざんレスポンスの再利用の頻度を高めることができる。
 これは、Cross-origin BCP攻撃では、任意のファイルのレスポンスに改ざんを行うことができることに起因する。
-これにより、一つのサイトだけでなく多くのサイトに共通して利用されるようなファイル（cssやjsファイルなど）を改ざんの対象とすることができる。
+これにより、１つのサイトだけでなく多くのサイトに共通して利用されるようなファイル（cssやjsファイルなど）を改ざんの対象とすることができる。
 これに対して、\ref{sec:same-origin-bcp}節で記述のSame-origin BCP攻撃は、攻撃者がファイルを指定することはできず、通信に介入した際に偶然行われていた通信のみを改ざん可能な対象とする。
 
 Cross-origin BCP攻撃は図\ref{fig:CrossBCP_flow}に示す攻撃フローで実現される。
@@ -304,8 +304,8 @@ Cross-origin BCP攻撃は図\ref{fig:CrossBCP_flow}に示す攻撃フローで�
 本節では、提案モデルでWeb Cache Deception Attack\cite{WCD}（以下、WCD攻撃とする）が表現可能であるかを確認する。
 
 \subsection{攻撃の概要とフロー}
-WCD攻撃は攻撃対象となるサーバと中継者、二つのブラウザで成り立つ攻撃である。
-攻撃者はこれらのうち一つのブラウザを所有し、本来、攻撃者がサーバから得ることのできないファイルを取得することが目的である。
+WCD攻撃は攻撃対象となるサーバと中継者、２つのブラウザで成り立つ攻撃である。
+攻撃者はこれらのうち１つのブラウザを所有し、本来、攻撃者がサーバから得ることのできないファイルを取得することが目的である。
 
 WCD攻撃は図\ref{fig:WCD_flow}に示す攻撃フローで実現される。
 まず、攻撃者にアクセス権の無いファイルに対して、正当なユーザに中継者を経由してアクセスさせる。
