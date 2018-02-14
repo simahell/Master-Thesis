@@ -113,14 +113,12 @@ sig CookieDifItem extends DifItem{
 \section{直前状態を判定する述語}
 \ref{sec:state-class}で述べたStateクラスに対して、同一の状態遷移上で直前となる状態を判定する述語LastStateを利用できる。
 このLastStateは三つの引数を要し、そのうちの二つはStateでありそれぞれpre、postと表す。
-\color{red}
 ここで、述語LastStateはpreがpostの直前の状態である場合に真となるよう作成する。
 しかし、postが複数の時刻で継続している状態である場合にはpostは複数の時刻を持つ。
 したがって、この二つの入力のみでは一つのpostに対して真となるpreが複数存在することになる。
 これを防ぐために、postの時刻を指定するStateTransactionを引数に追加する（これをstrとする）。
 これにより、与えられたトランザクションに含まれるpostの時刻に限定して、その時刻においてpreが直前であるか判定でき、真となる組み合わせが一意に定まる。
 このように作成した述語LastStateをCode\ref{code:LastState}に示す。
-\color{black}
 
 \begin{lstlisting}[caption=状態遷移において直前の状態を判定する述語, label=code:LastState]
 pred LastState[pre:State, post:State, str:StateTransaction]{
