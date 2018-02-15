@@ -275,11 +275,11 @@ CacheState0は変化項目としてCacheDifItem0を持ち，CacheState1はCacheD
 \begin{lstlisting}[caption=レスポンスの格納と削除の表現, label=code:StoreResponse]
 fact flowCacheState{
 	all cs:CacheState |
-		FirstState[cs] implies
+		InitialState[cs] implies
 			no cs.dif.store
 
 	all pre, post:CacheState, str:StateTransaction |
-		JustBeforeState[pre, post, str] implies {
+		LastState[pre, post, str] implies {
 			post in str.beforeState implies post.dif.store in pre.dif.store
 			post in str.afterState implies post.dif.store in (pre.dif.store + str.response)
 		}
@@ -334,7 +334,7 @@ fact happenCacheReuse{
 			reuse.from in str.request.(from + to)
 
 			some pre, post:CacheState |
-				(post in str.afterState and JustBeforeState[pre, post, str]) implies
+				(post in str.afterState and LastState[pre, post, str]) implies
 					{
 						reuse.target in pre.dif.store
 						reuse.from.cache = pre.eq.cache
